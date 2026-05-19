@@ -42,7 +42,6 @@ export default function Home() {
           .eq('IdBusiness', defaultSettings.id)
           .eq('CategoryId', category.Id)
           .eq('Active', true)
-          .gt('StockQuantity', 0)
           .limit(1)
           .maybeSingle();
 
@@ -68,7 +67,6 @@ export default function Home() {
             image: imageUrl,
             description: productData.Description,
             material: '',
-            inStock: productData.StockQuantity > 0,
             rating: 4.5,
             reviews: 0,
             taxes: productData.Taxes || 0

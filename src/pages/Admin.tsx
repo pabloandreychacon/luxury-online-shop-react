@@ -150,7 +150,7 @@ export default function Admin() {
           </button>
         </div>
 
-        <div className="flex gap-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
           <button
             onClick={() => setActiveTab('settings')}
             className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'settings'

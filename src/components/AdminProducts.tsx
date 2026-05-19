@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { defaultSettings } from '../data/settings';
+import { defaultSettings, getBusinessLanguages } from '../data/settings';
 
 interface Product {
   Id: string;
@@ -69,17 +69,17 @@ export default function AdminProducts() {
   const [newMediaInputs, setNewMediaInputs] = useState<Record<string, { url: string; isVideo: boolean }>>({});
   const [productTranslations, setProductTranslations] = useState<Record<string, Record<string, { Name: string; Description?: string }>>>({});
   const [translationLangs, setTranslationLangs] = useState<Record<string, string>>({});
-
-  const langOptions = [
+  const [langOptions, setLangOptions] = useState([
     { code: 'en', label: '🇺🇸 EN' },
     { code: 'es', label: '🇪🇸 ES' },
     { code: 'zh', label: '🇨🇳 中文' },
-  ];
+  ]);
 
   useEffect(() => {
     loadProducts();
     loadCategories();
     loadBrands();
+    loadLanguageOptions();
   }, []);
 
   const loadProducts = async () => {
@@ -93,6 +93,18 @@ export default function AdminProducts() {
       const productIds = data.map((product) => Number(product.Id));
       await loadProductMedia(productIds);
       await loadProductTranslations(productIds);
+    }
+  };
+
+  const loadLanguageOptions = async () => {
+    const languages = await getBusinessLanguages();
+    if (languages.length > 0) {
+      setLangOptions(
+        languages.map((lang) => ({
+          code: lang.Code,
+          label: lang.Label?.trim() || lang.Code.toUpperCase(),
+        }))
+      );
     }
   };
 
@@ -169,7 +181,7 @@ export default function AdminProducts() {
 
     setProductMedia((prev) => {
       const key = String(productId);
-      const updated = prev[key]?.filter((item) => item.Id !== mediaId) || [];
+      const updated = (prev[key]?.filter((item) => item.Id !== mediaId) || []) as ProductMediaItem[];
       return { ...prev, [key]: updated };
     });
   };
@@ -183,7 +195,7 @@ export default function AdminProducts() {
 
     setProductMedia((prev) => {
       const key = String(productId);
-      const updated = prev[key]?.map((item) => item.Id === mediaId ? { ...item, isVideo, MediaType: isVideo ? 'video' : 'image' } : item) || [];
+      const updated = (prev[key]?.map((item) => item.Id === mediaId ? { ...item, isVideo, MediaType: isVideo ? 'video' : 'image' } : item) || []) as ProductMediaItem[];
       return { ...prev, [key]: updated };
     });
   };
@@ -223,7 +235,7 @@ export default function AdminProducts() {
       Description: current.Description || null,
     };
 
-    const { error } = await supabase.from('ProductTranslations').upsert([payload], { onConflict: ['ProductId', 'Language'] });
+    const { error } = await supabase.from('ProductTranslations').upsert([payload], { onConflict: 'ProductId,Language' });
     if (error) {
       alert('Error saving translation');
       await loadProductTranslations([Number(productId)]);
@@ -297,7 +309,7 @@ export default function AdminProducts() {
     }]).select('Id').maybeSingle();
 
     if (error) {
-      alert(`Error adding product: ${error.message}`);
+      alert(`Error adding product: ${error?.message || JSON.stringify(error)}`);
       return;
     }
 
@@ -312,11 +324,6 @@ export default function AdminProducts() {
       if (trErr) {
         console.error('Error inserting translation:', trErr);
       }
-    }
-
-    if (error) {
-      alert(`Error adding product: ${error.message}`);
-      return;
     }
 
     setNewProduct({ name: '', price: 0, categoryId: 0, brandId: 0, description: '', stockQuantity: 0, taxes: 0, weight: 0, isOffer: false });
@@ -431,18 +438,6 @@ export default function AdminProducts() {
               ))}
             </select>
             {errors.brand && <p className="text-red-500 text-sm mt-1">{errors.brand}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('admin.stock')}
-            </label>
-            <input
-              type="number"
-              placeholder="0"
-              value={newProduct.stockQuantity}
-              onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: parseInt(e.target.value) || 0 })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-            />
           </div>
           <div className="flex items-center gap-2 mt-2">
             <input
@@ -559,17 +554,7 @@ export default function AdminProducts() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('admin.stock')}
-                  </label>
-                  <input
-                    type="number"
-                    value={product.StockQuantity}
-                    onChange={(e) => handleUpdateProduct(product.Id, 'StockQuantity', parseInt(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                  />
-                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Taxes (%)

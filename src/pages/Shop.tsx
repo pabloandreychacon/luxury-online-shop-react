@@ -43,7 +43,6 @@ export default function Shop() {
       .select('*')
       .eq('IdBusiness', defaultSettings.id)
       .eq('Active', true)
-      .gt('StockQuantity', 0);
 
     if (productsData && categoriesData) {
       const productIds = productsData.map((p) => p.Id);
@@ -88,7 +87,6 @@ export default function Shop() {
           image: mediaMap[p.Id] || p.ImageUrl || '',
           description: preferred?.Description || first?.Description || '',
           material: '',
-          inStock: p.StockQuantity > 0,
           rating: 4.5,
           reviews: 0
         };

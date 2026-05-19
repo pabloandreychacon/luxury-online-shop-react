@@ -62,7 +62,6 @@ export default function ProductDetail() {
         image: productData.ImageUrl,
         description: preferred?.Description || '',
         material: '',
-        inStock: productData.StockQuantity > 0,
         rating: 4.5,
         reviews: 0
       };
@@ -109,7 +108,6 @@ export default function ProductDetail() {
       .eq('IdBusiness', defaultSettings.id)
       .eq('CategoryId', categoryId)
       .eq('Active', true)
-      .gt('StockQuantity', 0)
       .neq('Id', currentProductId)
       .limit(3);
 
@@ -161,7 +159,6 @@ export default function ProductDetail() {
           image: mediaMap[p.Id] || p.ImageUrl,
           description: preferred?.Description || '',
           material: '',
-          inStock: p.StockQuantity > 0,
           rating: 4.5,
           reviews: 0
         };

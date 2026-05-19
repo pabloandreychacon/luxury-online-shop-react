@@ -99,7 +99,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
         description: preferred?.Description || item.Products?.Description || '',
         category: '',
         material: '',
-        inStock: item.Products.StockQuantity > 0,
         rating: 4.5,
         reviews: 0,
         quantity: item.Quantity,
