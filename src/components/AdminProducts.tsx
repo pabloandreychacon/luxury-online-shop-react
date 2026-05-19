@@ -63,6 +63,7 @@ export default function AdminProducts() {
     weight: 0,
     isOffer: false,
   });
+
   const [errors, setErrors] = useState({ name: '', price: '', category: '', brand: '' });
   const [productMedia, setProductMedia] = useState<Record<string, ProductMediaItem[]>>({});
   const [newMediaInputs, setNewMediaInputs] = useState<Record<string, { url: string; isVideo: boolean }>>({});
