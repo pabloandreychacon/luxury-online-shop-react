@@ -6,11 +6,12 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Product } from '../lib/types';
 import { supabase } from '../lib/supabase';
-import { defaultSettings, getSettings } from '../data/settings';
+import { defaultSettings } from '../data/settings';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
+  const { i18n } = useTranslation();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -18,7 +19,7 @@ export default function ProductDetail() {
   const [showAdded, setShowAdded] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
-  const [images, setImages] = useState<string[]>([]);
+  const [mediaItems, setMediaItems] = useState<{ MediaUrl: string; isVideo: boolean }[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -42,13 +43,24 @@ export default function ProductDetail() {
         .eq('Id', productData.CategoryId)
         .maybeSingle();
 
+      // fetch translation for current language
+      // fetch all translations for this product and pick preferred or first available
+      const { data: trAll } = await supabase
+        .from('ProductTranslations')
+        .select('Language, Name, Description')
+        .eq('ProductId', productData.Id);
+
+      const trMap: Record<string, { Name: string; Description?: string }> = {};
+      (trAll || []).forEach((r) => { trMap[r.Language] = { Name: r.Name, Description: r.Description }; });
+      const preferred = trMap[i18n.language] || Object.values(trMap)[0];
+
       const mappedProduct: Product = {
         id: String(productData.Id),
-        name: productData.Name,
+        name: preferred?.Name || '',
         category: categoryData?.Name?.toLowerCase() || '',
         price: productData.Price,
         image: productData.ImageUrl,
-        description: productData.Description,
+        description: preferred?.Description || '',
         material: '',
         inStock: productData.StockQuantity > 0,
         rating: 4.5,
@@ -57,49 +69,36 @@ export default function ProductDetail() {
 
       setProduct(mappedProduct);
 
-      // Load images from storage
-      await loadProductImages(productData.Id);
+      await loadProductMedia(productData.Id, productData.ImageUrl);
 
-      // Load related products
       await loadRelatedProducts(productData.CategoryId, productData.Id);
     }
   };
 
-  const loadProductImages = async (productId: number) => {
+  const loadProductMedia = async (productId: number, fallbackUrl?: string) => {
     try {
-      const settings = await getSettings();
-      const businessName = settings.businessName.replace(/\s+/g, '');
+      const { data, error } = await supabase
+        .from('ProductMedia')
+        .select('MediaUrl, isVideo')
+        .eq('ProductId', productId)
+        .eq('IdBusiness', defaultSettings.id)
+        .order('DisplayOrder', { ascending: true });
 
-      const { data, error } = await supabase.storage
-        .from('postore')
-        .list(`${businessName}/${productId}`);
-
-      if (data && !error) {
-        const imageUrls = data
-          .filter(file => !file.name.startsWith('.'))
-          .map(file => {
-            const { data: publicUrl } = supabase.storage
-              .from('postore')
-              .getPublicUrl(`${businessName}/${productId}/${file.name}`);
-            return publicUrl.publicUrl;
-          });
-
-        // Get ImageUrl from product
-        const { data: productData } = await supabase
-          .from('Products')
-          .select('ImageUrl')
-          .eq('Id', productId)
-          .maybeSingle();
-
-        // Add ImageUrl as first image if it exists
-        const allImages = productData?.ImageUrl
-          ? [productData.ImageUrl, ...imageUrls]
-          : imageUrls;
-
-        setImages(allImages.length > 0 ? allImages : []);
+      if (error) {
+        console.error('Error loading product media:', error);
+        return;
       }
+
+      if (data && data.length > 0) {
+        setMediaItems(data.map((item) => ({ MediaUrl: item.MediaUrl, isVideo: item.isVideo })));
+      } else if (fallbackUrl) {
+        setMediaItems([{ MediaUrl: fallbackUrl, isVideo: false }]);
+      } else {
+        setMediaItems([]);
+      }
+      setActiveImageIndex(0);
     } catch (error) {
-      console.error('Error loading images:', error);
+      console.error('Error loading product media:', error);
     }
   };
 
@@ -121,18 +120,52 @@ export default function ProductDetail() {
         .eq('Id', categoryId)
         .maybeSingle();
 
-      const mapped: Product[] = data.map(p => ({
-        id: String(p.Id),
-        name: p.Name,
-        category: categoryData?.Name?.toLowerCase() || '',
-        price: p.Price,
-        image: p.ImageUrl,
-        description: p.Description,
-        material: '',
-        inStock: p.StockQuantity > 0,
-        rating: 4.5,
-        reviews: 0
-      }));
+      const relatedProductIds = data.map((p) => p.Id);
+      const { data: mediaData } = await supabase
+        .from('ProductMedia')
+        .select('ProductId, MediaUrl, DisplayOrder')
+        .in('ProductId', relatedProductIds)
+        .eq('IdBusiness', defaultSettings.id)
+        .order('DisplayOrder', { ascending: true });
+
+      const mediaMap: Record<number, string> = {};
+      if (mediaData) {
+        mediaData.forEach((media) => {
+          if (!mediaMap[media.ProductId]) {
+            mediaMap[media.ProductId] = media.MediaUrl;
+          }
+        });
+      }
+
+      // fetch translations for related products in current language
+      const relatedIds = data.map((p) => p.Id);
+      const { data: translations } = await supabase
+        .from('ProductTranslations')
+        .select('ProductId, Language, Name, Description')
+        .in('ProductId', relatedIds);
+
+      const trMap: Record<number, Record<string, { Name: string; Description?: string }>> = {};
+      (translations || []).forEach((t) => {
+        trMap[t.ProductId] = trMap[t.ProductId] || {};
+        trMap[t.ProductId][t.Language] = { Name: t.Name, Description: t.Description };
+      });
+
+      const mapped: Product[] = data.map(p => {
+        const trs = trMap[p.Id] || {};
+        const preferred = trs[i18n.language] || Object.values(trs)[0];
+        return {
+          id: String(p.Id),
+          name: preferred?.Name || '',
+          category: categoryData?.Name?.toLowerCase() || '',
+          price: p.Price,
+          image: mediaMap[p.Id] || p.ImageUrl,
+          description: preferred?.Description || '',
+          material: '',
+          inStock: p.StockQuantity > 0,
+          rating: 4.5,
+          reviews: 0
+        };
+      });
       setRelatedProducts(mapped);
     }
   };
@@ -190,8 +223,12 @@ export default function ProductDetail() {
     alert('Link copied to clipboard!');
   };
 
-  // Use loaded images or fallback to main image
-  const displayImages = images.length > 0 ? images : (product?.image ? [product.image] : []);
+  // Use loaded media or fallback to main image
+  const displayMedia = mediaItems.length > 0
+    ? mediaItems
+    : product?.image
+      ? [{ MediaUrl: product.image, isVideo: false }]
+      : [];
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -223,17 +260,25 @@ export default function ProductDetail() {
           <div>
             {/* Main Image */}
             <div className="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-4 aspect-square">
-              <img
-                src={displayImages[activeImageIndex]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              {displayMedia[activeImageIndex]?.isVideo ? (
+                <video
+                  src={displayMedia[activeImageIndex].MediaUrl}
+                  controls
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={displayMedia[activeImageIndex]?.MediaUrl}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
 
             {/* Thumbnail Gallery */}
-            {displayImages.length > 1 && (
+            {displayMedia.length > 1 && (
               <div className="grid grid-cols-4 gap-3">
-                {displayImages.map((img, idx) => (
+                {displayMedia.map((media, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImageIndex(idx)}
@@ -242,7 +287,11 @@ export default function ProductDetail() {
                       : 'border-gray-300 dark:border-gray-700 hover:border-luxury-gold'
                       }`}
                   >
-                    <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+                    {media.isVideo ? (
+                      <video src={media.MediaUrl} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={media.MediaUrl} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+                    )}
                   </button>
                 ))}
               </div>

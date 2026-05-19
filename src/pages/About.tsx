@@ -1,7 +1,18 @@
 import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react';
+import { getSettings } from '../data/settings';
 
 export default function About() {
   const { t } = useTranslation();
+  const [businessName, setBusinessName] = useState('Costa Rica Luxury');
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const settings = await getSettings();
+      setBusinessName(settings.businessName);
+    };
+    loadSettings();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 py-20">
@@ -9,7 +20,7 @@ export default function About() {
         <div className="text-center mb-16">
           <h1 className="font-luxury text-5xl mb-6">{t('about.title')}</h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
-            {t('about.subtitle')}
+            {t('about.subtitle', { businessName })}
           </p>
         </div>
 
@@ -17,7 +28,7 @@ export default function About() {
           <section>
             <h2 className="font-luxury text-3xl mb-4">{t('about.missionTitle')}</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-              {t('about.missionText')}
+              {t('about.missionText', { businessName })}
             </p>
           </section>
 
@@ -36,7 +47,7 @@ export default function About() {
           </section>
 
           <section className="bg-gray-50 dark:bg-gray-800 p-8 rounded-lg">
-            <h2 className="font-luxury text-2xl mb-4">{t('about.whyChooseTitle')}</h2>
+            <h2 className="font-luxury text-2xl mb-4">{t('about.whyChooseTitle', { businessName })}</h2>
             <ul className="space-y-3 text-gray-700 dark:text-gray-300">
               <li className="flex items-start gap-3">
                 <span className="text-luxury-gold">✓</span>

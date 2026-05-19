@@ -6,12 +6,18 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useWishlist } from '../context/WishlistContext';
-import { getSettings } from '../data/settings';
+import { getSettings, getBusinessLanguages } from '../data/settings';
 
 export default function Header() {
   const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const defaultLangOptions = [
+    { code: 'en', label: '🇺🇸 EN' },
+    { code: 'es', label: '🇪🇸 ES' },
+    { code: 'zh', label: '🇨🇳 中文' },
+  ];
   const [businessName, setBusinessName] = useState('Costa Rica Luxury');
+  const [langOptions, setLangOptions] = useState(defaultLangOptions);
   const { itemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const { user, logout } = useAuth();
@@ -25,9 +31,26 @@ export default function Header() {
     loadBusinessName();
   }, []);
 
-  const toggleLanguage = () => {
-    i18n.changeLanguage(i18n.language === 'en' ? 'es' : 'en');
-  };
+  useEffect(() => {
+    const loadLanguageOptions = async () => {
+      const languages = await getBusinessLanguages();
+      if (languages.length > 0) {
+        const loadedOptions = languages.map((lang) => ({
+          code: lang.Code,
+          label: lang.Label?.trim() || lang.Code.toUpperCase(),
+        }));
+        if (!loadedOptions.some((opt) => opt.code === i18n.language)) {
+          const fallback = defaultLangOptions.find((opt) => opt.code === i18n.language);
+          if (fallback) {
+            loadedOptions.push(fallback);
+          }
+        }
+        setLangOptions(loadedOptions);
+      }
+    };
+
+    loadLanguageOptions();
+  }, [i18n.language]);
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-luxury-dark border-b border-gray-200 dark:border-gray-800">
@@ -59,13 +82,16 @@ export default function Header() {
 
           {/* Right Icons */}
           <div className="flex items-center space-x-4">
-            {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              className="text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition text-sm font-semibold"
+            {/* Language Select */}
+            <select
+              value={i18n.language}
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              className="text-sm font-semibold bg-transparent text-gray-700 dark:text-gray-300 hover:text-luxury-gold focus:outline-none cursor-pointer"
             >
-              {i18n.language.toUpperCase()}
-            </button>
+              {langOptions.map((l) => (
+                <option key={l.code} value={l.code}>{l.label}</option>
+              ))}
+            </select>
 
             {/* Dark Mode Toggle */}
             <button

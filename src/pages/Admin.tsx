@@ -8,13 +8,14 @@ import AdminProducts from '../components/AdminProducts';
 import AdminCategories from '../components/AdminCategories';
 import AdminShippingMethods from '../components/AdminShippingMethods';
 import AdminOrders from '../components/AdminOrders';
+import AdminBrands from '../components/AdminBrands';
 
 export default function Admin() {
   const { t } = useTranslation();
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'settings' | 'products' | 'categories' | 'shipping' | 'orders'>('settings');
+  const [activeTab, setActiveTab] = useState<'settings' | 'products' | 'categories' | 'brands' | 'shipping' | 'orders'>('settings');
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
 
@@ -169,6 +170,15 @@ export default function Admin() {
             {t('admin.categories')}
           </button>
           <button
+            onClick={() => setActiveTab('brands')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'brands'
+              ? 'bg-luxury-gold text-luxury-dark'
+              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
+              }`}
+          >
+            {t('admin.brands')}
+          </button>
+          <button
             onClick={() => setActiveTab('products')}
             className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'products'
               ? 'bg-luxury-gold text-luxury-dark'
@@ -177,6 +187,7 @@ export default function Admin() {
           >
             {t('admin.products')}
           </button>
+
           <button
             onClick={() => setActiveTab('shipping')}
             className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'shipping'
@@ -200,6 +211,7 @@ export default function Admin() {
         {activeTab === 'settings' && <AdminSettings />}
         {activeTab === 'products' && <AdminProducts />}
         {activeTab === 'categories' && <AdminCategories />}
+        {activeTab === 'brands' && <AdminBrands />}
         {activeTab === 'shipping' && <AdminShippingMethods />}
         {activeTab === 'orders' && <AdminOrders />}
 

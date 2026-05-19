@@ -1,14 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { CartProvider, useCart } from './context/CartContext';
-import { WishlistProvider } from './context/WishlistContext';
-import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import AddToCartModal from './components/AddToCartModal';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from './store/useAuthStore';
+import { useCartStore } from './store/useCartStore';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
@@ -23,15 +21,23 @@ import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
 
 function AppContent() {
-  const { showModal, lastAddedProduct, closeModal } = useCart();
+  const { showModal, lastAddedProduct, closeModal, loadFromStorage, loadFromSupabase } = useCartStore();
+  const { checkAuth, user } = useAuthStore();
   const [searchParams] = useSearchParams();
   const { i18n } = useTranslation();
 
   useEffect(() => {
+    checkAuth();
+    loadFromStorage();
+  }, []);
+
+  useEffect(() => {
+    if (user?.id) loadFromSupabase(user.id);
+  }, [user?.id]);
+
+  useEffect(() => {
     const lang = searchParams.get('lang');
-    if (lang && (lang === 'en' || lang === 'es')) {
-      i18n.changeLanguage(lang);
-    }
+    if (lang && (lang === 'en' || lang === 'es')) i18n.changeLanguage(lang);
   }, [searchParams, i18n]);
 
   return (
@@ -57,9 +63,9 @@ function AppContent() {
         <Footer />
         <ScrollToTop />
       </div>
-      <AddToCartModal 
-        isOpen={showModal} 
-        onClose={closeModal} 
+      <AddToCartModal
+        isOpen={showModal}
+        onClose={closeModal}
         productName={lastAddedProduct}
       />
     </>
@@ -68,17 +74,9 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <Router>
-              <AppContent />
-            </Router>
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

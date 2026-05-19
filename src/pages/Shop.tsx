@@ -6,85 +6,8 @@ import { Product } from '../lib/types';
 import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
 
-export const MOCK_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'Classic Leather Tote',
-    category: 'bag',
-    price: 1299.99,
-    image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&h=600&fit=crop',
-    description: 'Timeless Italian leather tote with gold hardware',
-    material: 'Premium Italian Leather',
-    inStock: true,
-    rating: 4.8,
-    reviews: 124,
-  },
-  {
-    id: '2',
-    name: 'Silk Luxury Scarf',
-    category: 'scarf',
-    price: 449.99,
-    image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=500&h=600&fit=crop',
-    description: 'Hand-painted silk scarf from French artisans',
-    material: '100% Pure Silk',
-    inStock: true,
-    rating: 4.9,
-    reviews: 89,
-  },
-  {
-    id: '3',
-    name: 'Chronograph Watch',
-    category: 'watch',
-    price: 2499.99,
-    image: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&h=600&fit=crop',
-    description: 'Swiss precision with sapphire crystal',
-    material: 'Stainless Steel',
-    dimensions: '42mm diameter',
-    inStock: true,
-    rating: 4.9,
-    reviews: 156,
-  },
-  {
-    id: '4',
-    name: 'Crossbody Bag',
-    category: 'bag',
-    price: 899.99,
-    image: 'https://images.unsplash.com/photo-1576995853950-4282b45e68e8?w=500&h=600&fit=crop',
-    description: 'Elegant crossbody with adjustable strap',
-    material: 'Vegan Leather',
-    inStock: true,
-    rating: 4.7,
-    reviews: 67,
-  },
-  {
-    id: '5',
-    name: 'Cashmere Wrap',
-    category: 'scarf',
-    price: 899.99,
-    image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=500&h=600&fit=crop',
-    description: 'Luxurious cashmere wrap from Kashmir',
-    material: '100% Cashmere',
-    inStock: false,
-    rating: 4.8,
-    reviews: 45,
-  },
-  {
-    id: '6',
-    name: 'Dress Watch',
-    category: 'watch',
-    price: 1899.99,
-    image: 'https://images.unsplash.com/photo-1509048191080-d2984a20e132?w=500&h=600&fit=crop',
-    description: 'Minimalist dress watch with automatic movement',
-    material: 'Rose Gold',
-    dimensions: '36mm diameter',
-    inStock: true,
-    rating: 4.8,
-    reviews: 92,
-  },
-];
-
 export default function Shop() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState('featured');
   const [maxPrice, setMaxPrice] = useState(5000);
@@ -102,7 +25,7 @@ export default function Shop() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [i18n.language]);
 
   const loadData = async () => {
     // Load categories first
@@ -111,7 +34,7 @@ export default function Shop() {
       .select('*')
       .eq('IdBusiness', defaultSettings.id)
       .eq('Active', true);
-    
+
     setCategories(categoriesData || []);
 
     // Then load products
@@ -121,17 +44,49 @@ export default function Shop() {
       .eq('IdBusiness', defaultSettings.id)
       .eq('Active', true)
       .gt('StockQuantity', 0);
-    
+
     if (productsData && categoriesData) {
+      const productIds = productsData.map((p) => p.Id);
+      const { data: translationsData } = await supabase
+        .from('ProductTranslations')
+        .select('ProductId, Language, Name, Description')
+        .in('ProductId', productIds);
+
+      const translationsMap: Record<number, Record<string, { Name: string; Description?: string }>> = {};
+      (translationsData || []).forEach((t) => {
+        const pid = t.ProductId;
+        translationsMap[pid] = translationsMap[pid] || {};
+        translationsMap[pid][t.Language] = { Name: t.Name, Description: t.Description };
+      });
+      const { data: mediaData } = await supabase
+        .from('ProductMedia')
+        .select('ProductId, MediaUrl, DisplayOrder')
+        .in('ProductId', productIds)
+        .eq('IdBusiness', defaultSettings.id)
+        .order('DisplayOrder', { ascending: true });
+
+      const mediaMap: Record<number, string> = {};
+      if (mediaData) {
+        mediaData.forEach((media) => {
+          if (!mediaMap[media.ProductId]) {
+            mediaMap[media.ProductId] = media.MediaUrl;
+          }
+        });
+      }
+
       const mappedProducts: Product[] = productsData.map(p => {
         const cat = categoriesData.find(c => c.Id === p.CategoryId);
+        // pick translation for current language, or first available
+        const trs = translationsMap[p.Id] || {};
+        const preferred = trs[i18n.language];
+        const first = Object.values(trs)[0];
         return {
           id: String(p.Id),
-          name: p.Name,
+          name: preferred?.Name || first?.Name || '',
           category: cat?.Name?.toLowerCase() || '',
           price: p.Price,
-          image: p.ImageUrl,
-          description: p.Description,
+          image: mediaMap[p.Id] || p.ImageUrl || '',
+          description: preferred?.Description || first?.Description || '',
           material: '',
           inStock: p.StockQuantity > 0,
           rating: 4.5,
@@ -189,11 +144,10 @@ export default function Shop() {
                 <div className="space-y-2">
                   <button
                     onClick={() => setSelectedCategory('')}
-                    className={`w-full text-left px-3 py-2 rounded text-sm transition ${
-                      selectedCategory === ''
-                        ? 'bg-luxury-gold text-luxury-dark font-semibold'
-                        : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedCategory === ''
+                      ? 'bg-luxury-gold text-luxury-dark font-semibold'
+                      : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                      }`}
                   >
                     All Products
                   </button>
@@ -201,11 +155,10 @@ export default function Shop() {
                     <button
                       key={cat.Id}
                       onClick={() => setSelectedCategory(cat.Name.toLowerCase())}
-                      className={`w-full text-left px-3 py-2 rounded text-sm transition ${
-                        selectedCategory === cat.Name.toLowerCase()
-                          ? 'bg-luxury-gold text-luxury-dark font-semibold'
-                          : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedCategory === cat.Name.toLowerCase()
+                        ? 'bg-luxury-gold text-luxury-dark font-semibold'
+                        : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
                     >
                       {cat.DisplayName}
                     </button>

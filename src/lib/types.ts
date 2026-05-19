@@ -39,3 +39,11 @@ export interface AuthState {
   loading: boolean;
   error: string | null;
 }
+
+export interface ProductTranslation {
+  Id?: number;
+  ProductId: number;
+  Language: string;
+  Name: string;
+  Description?: string | null;
+}

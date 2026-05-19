@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
-import heroImage from '../assets/img/main-luxe-hero.jpg';
+import HeroCarousel from '../components/HeroCarousel';
 import ProductCard from '../components/ProductCard';
 import { Product } from '../lib/types';
 
@@ -34,7 +34,7 @@ export default function Home() {
 
     if (categoriesData) {
       const featuredProducts: Product[] = [];
-      
+
       for (const category of categoriesData) {
         const { data: productData } = await supabase
           .from('Products')
@@ -45,14 +45,27 @@ export default function Home() {
           .gt('StockQuantity', 0)
           .limit(1)
           .maybeSingle();
-        
+
         if (productData) {
+          let imageUrl = productData.ImageUrl || '';
+          const { data: mediaData } = await supabase
+            .from('ProductMedia')
+            .select('MediaUrl')
+            .eq('ProductId', productData.Id)
+            .eq('IdBusiness', defaultSettings.id)
+            .order('DisplayOrder', { ascending: true })
+            .limit(1);
+
+          if (mediaData && mediaData.length > 0) {
+            imageUrl = mediaData[0].MediaUrl;
+          }
+
           featuredProducts.push({
             id: String(productData.Id),
             name: productData.Name,
             category: category.Name?.toLowerCase() || '',
             price: productData.Price,
-            image: productData.ImageUrl,
+            image: imageUrl,
             description: productData.Description,
             material: '',
             inStock: productData.StockQuantity > 0,
@@ -62,41 +75,14 @@ export default function Home() {
           });
         }
       }
-      
+
       setProducts(featuredProducts);
     }
   };
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="relative h-screen bg-luxury-dark text-white flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 opacity-30 bg-cover bg-center animate-zoom"
-          style={{
-            backgroundImage: `url(${heroImage})`,
-          }}
-        />
-
-        {/* Content */}
-        <div className="container-luxury relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-luxury mb-6 text-luxury-gold">
-            {t('hero.title')}
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            {t('hero.subtitle')}
-          </p>
-          <Link to="/shop" className="btn-primary inline-flex items-center gap-2">
-            {t('hero.cta')} <ArrowRight size={20} />
-          </Link>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="text-luxury-gold text-sm">↓</div>
-        </div>
-      </section>
+      <HeroCarousel />
 
       {/* Categories Section */}
       <section className="py-20 bg-white dark:bg-gray-900">

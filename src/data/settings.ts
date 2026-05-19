@@ -15,6 +15,13 @@ export interface BusinessSettings {
   languageFormat?: string;
 }
 
+export interface BusinessLanguage {
+  IdBusiness: number;
+  Code: string;
+  Label: string | null;
+  originalCode?: string;
+}
+
 export const defaultSettings: BusinessSettings = {
   id: 8, // this Id is equal to the Supabase row Id for default Settings table entry
   email: 'info@default.com',
@@ -73,5 +80,30 @@ export async function getSettings(): Promise<BusinessSettings> {
   } catch (err) {
     console.error('getSettings unexpected error', err);
     return defaultSettings;
+  }
+}
+
+export async function getBusinessLanguages(): Promise<BusinessLanguage[]> {
+  try {
+    const { data, error } = await supabase
+      .from('BusinessLanguages')
+      .select('IdBusiness, Code, Label')
+      .eq('IdBusiness', defaultSettings.id)
+      .order('Code', { ascending: true });
+
+    if (error) {
+      console.error('Supabase getBusinessLanguages error:', error);
+      return [];
+    }
+
+    return (
+      (data || []) as BusinessLanguage[]
+    ).map((language) => ({
+      ...language,
+      originalCode: language.Code,
+    }));
+  } catch (err) {
+    console.error('getBusinessLanguages unexpected error', err);
+    return [];
   }
 }
