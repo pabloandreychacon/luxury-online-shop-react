@@ -498,24 +498,6 @@ export default function AdminProducts() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('common.name')}
-                  </label>
-                  <input
-                    type="text"
-                    value={productTranslations[product.Id]?.[translationLangs[product.Id] || 'en']?.Name || ''}
-                    onChange={(e) => setProductTranslations((prev) => {
-                      const key = product.Id;
-                      const lang = translationLangs[key] || 'en';
-                      const copy = { ...prev };
-                      copy[key] = copy[key] || {};
-                      copy[key][lang] = { ...(copy[key][lang] || {}), Name: e.target.value };
-                      return copy;
-                    })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {t('product.price')}
                   </label>
                   <input
@@ -726,25 +708,6 @@ export default function AdminProducts() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('product.description')}
-                </label>
-                <textarea
-                  value={productTranslations[product.Id]?.[translationLangs[product.Id] || 'en']?.Description || ''}
-                  onChange={(e) => setProductTranslations((prev) => {
-                    const key = product.Id;
-                    const lang = translationLangs[key] || 'en';
-                    const copy = { ...prev };
-                    copy[key] = copy[key] || {};
-                    copy[key][lang] = { ...(copy[key][lang] || {}), Description: e.target.value };
-                    return copy;
-                  })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                  rows={3}
-                />
               </div>
 
               <div className="flex flex-wrap items-center gap-4">

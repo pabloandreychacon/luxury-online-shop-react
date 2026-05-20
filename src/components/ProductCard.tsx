@@ -28,11 +28,22 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="card-luxury rounded-lg overflow-hidden group">
       {/* Image Container */}
       <Link to={`/product/${product.id}`} className="relative h-80 bg-gray-200 dark:bg-gray-800 overflow-hidden block">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition duration-300 cursor-pointer"
-        />
+        {/\.mp4$/i.test(product.image) ? (
+          <video
+            src={product.image}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover cursor-pointer"
+          />
+        ) : (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition duration-300 cursor-pointer"
+          />
+        )}
         <button
           onClick={(e) => {
             e.preventDefault();

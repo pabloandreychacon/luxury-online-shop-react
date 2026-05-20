@@ -10,6 +10,7 @@ export interface Product {
   rating: number;
   reviews: number;
   taxes?: number;
+  brandId?: number;
 }
 
 export interface CartItem extends Product {

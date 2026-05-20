@@ -6,6 +6,8 @@ import { getSettings, defaultSettings } from '../data/settings';
 import { supabase } from '../lib/supabase';
 import heroImage from '../assets/img/main-luxe-hero.jpg';
 
+const isVideo = (url: string) => /\.mp4$/i.test(url);
+
 const getCurrencySymbol = (currencyCode?: string) => {
   switch (currencyCode) {
     case 'EUR':
@@ -55,7 +57,7 @@ const HeroCarousel = () => {
           .eq('IdBusiness', defaultSettings.id)
           .eq('Active', true)
           .eq('IsOffer', true)
-          .limit(4);
+          .limit(5);
 
         if (error) throw error;
 
@@ -72,18 +74,23 @@ const HeroCarousel = () => {
           const mediaMap: Record<number, string> = {};
           if (mediaData) {
             mediaData.forEach((media) => {
-              if (!mediaMap[media.ProductId]) {
+              const existing = mediaMap[media.ProductId];
+              // prefer video over image
+              if (!existing || (!isVideo(existing) && isVideo(media.MediaUrl))) {
                 mediaMap[media.ProductId] = media.MediaUrl;
               }
             });
           }
 
-          setSlides(slidesWithMedia.map((slide) => ({
-            ...slide,
-            ImageUrl: mediaMap[slide.Id] || slide.ImageUrl || ''
-          })));
+          setSlides(slidesWithMedia
+            .map((slide) => ({
+              ...slide,
+              ImageUrl: (mediaMap[slide.Id] || slide.ImageUrl || '').trim()
+            }))
+            .filter((slide) => slide.ImageUrl !== '')
+          );
         } else {
-          setSlides(slidesWithMedia);
+          setSlides(slidesWithMedia.filter((slide) => (slide.ImageUrl || '').trim() !== ''));
         }
       } catch (error) {
         console.error('Error loading hero carousel offers:', error);
@@ -139,11 +146,22 @@ const HeroCarousel = () => {
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10" />
-          <img
-            src={slide.ImageUrl || heroImage}
-            alt={slide.Name}
-            className="w-full h-full object-cover object-center scale-105 animate-slow-zoom"
-          />
+          {isVideo(slide.ImageUrl) ? (
+            <video
+              src={slide.ImageUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover object-center scale-105"
+            />
+          ) : (
+            <img
+              src={slide.ImageUrl || heroImage}
+              alt={slide.Name}
+              className="w-full h-full object-cover object-center scale-105 animate-slow-zoom"
+            />
+          )}
           <div className="absolute inset-0 z-20 flex items-center pt-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div className="space-y-6">
@@ -176,11 +194,22 @@ const HeroCarousel = () => {
               <div className="hidden lg:flex items-center justify-center">
                 <div className="relative group">
                   <div className="absolute -inset-4 bg-luxury-gold/20 blur-2xl group-hover:bg-luxury-gold/30 transition-all rounded-full" />
-                  <img
-                    src={slide.ImageUrl || heroImage}
-                    alt={slide.Name}
-                    className="relative w-80 h-80 object-cover rounded-sm shadow-2xl border-4 border-gray-900 transform rotate-3 group-hover:rotate-0 transition-transform duration-500"
-                  />
+                  {isVideo(slide.ImageUrl) ? (
+                    <video
+                      src={slide.ImageUrl}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="relative w-80 h-80 object-cover rounded-sm shadow-2xl border-4 border-gray-900 transform rotate-3 group-hover:rotate-0 transition-transform duration-500"
+                    />
+                  ) : (
+                    <img
+                      src={slide.ImageUrl || heroImage}
+                      alt={slide.Name}
+                      className="relative w-80 h-80 object-cover rounded-sm shadow-2xl border-4 border-gray-900 transform rotate-3 group-hover:rotate-0 transition-transform duration-500"
+                    />
+                  )}
                 </div>
               </div>
             </div>

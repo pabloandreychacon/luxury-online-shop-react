@@ -13,7 +13,9 @@ export default function Shop() {
   const [maxPrice, setMaxPrice] = useState(5000);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedBrand, setSelectedBrand] = useState<number>(0);
 
   const category = searchParams.get('category');
 
@@ -36,6 +38,13 @@ export default function Shop() {
       .eq('Active', true);
 
     setCategories(categoriesData || []);
+
+    const { data: brandsData } = await supabase
+      .from('Brands')
+      .select('Id, Name, DisplayName')
+      .eq('IdBusiness', defaultSettings.id)
+      .eq('Active', true);
+    setBrands(brandsData || []);
 
     // Then load products
     const { data: productsData } = await supabase
@@ -88,7 +97,8 @@ export default function Shop() {
           description: preferred?.Description || first?.Description || '',
           material: '',
           rating: 4.5,
-          reviews: 0
+          reviews: 0,
+          brandId: p.BrandId || 0
         };
       });
       setProducts(mappedProducts);
@@ -101,6 +111,10 @@ export default function Shop() {
     // Filter by category if specified
     if (selectedCategory) {
       filtered = filtered.filter(p => p.category === selectedCategory);
+    }
+
+    if (selectedBrand) {
+      filtered = filtered.filter(p => p.brandId === selectedBrand);
     }
 
     // Filter by price
@@ -116,7 +130,7 @@ export default function Shop() {
     }
 
     return filtered;
-  }, [products, selectedCategory, maxPrice, sortBy]);
+  }, [products, selectedCategory, selectedBrand, maxPrice, sortBy]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
@@ -159,6 +173,34 @@ export default function Shop() {
                         }`}
                     >
                       {cat.DisplayName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Brand Filter */}
+              <div className="mb-8">
+                <label className="block text-sm font-semibold mb-4">{t('product.brand')}</label>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setSelectedBrand(0)}
+                    className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedBrand === 0
+                      ? 'bg-luxury-gold text-luxury-dark font-semibold'
+                      : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                  >
+                    All Brands
+                  </button>
+                  {brands.map(brand => (
+                    <button
+                      key={brand.Id}
+                      onClick={() => setSelectedBrand(brand.Id)}
+                      className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedBrand === brand.Id
+                        ? 'bg-luxury-gold text-luxury-dark font-semibold'
+                        : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                    >
+                      {brand.DisplayName || brand.Name}
                     </button>
                   ))}
                 </div>
