@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import { ScrollTop } from 'luna-components-library';
+import { FloatingButton, ScrollTop } from 'luna-components-library';
 import AddToCartModal from './components/AddToCartModal';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +21,8 @@ import About from './pages/About';
 import Admin from './pages/Admin';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
-import CountCartButton from './components/CountCartButton';
+import { useCart } from './context/CartContext';
+import { ShoppingBag } from 'lucide-react';
 
 function AppContent() {
   const { showModal, lastAddedProduct, closeModal, loadFromStorage, loadFromSupabase } = useCartStore();
@@ -29,6 +30,7 @@ function AppContent() {
   const [searchParams] = useSearchParams();
   const { i18n, t } = useTranslation();
   const [whatsappPhone, setWhatsappPhone] = useState('');
+  const { itemCount } = useCart();
 
   useEffect(() => {
     checkAuth();
@@ -73,8 +75,22 @@ function AppContent() {
           </Routes>
         </main>
         <Footer />
-        <ScrollTop threshold={300} position="bottom-right" />
-        <CountCartButton />
+        <ScrollTop threshold={300} position="bottom-right"
+          className='!bg-luxury-gold !text-luxury-dark' />
+        {itemCount > 0 && (
+          <FloatingButton
+            position="middle-right"
+            onClick={() => { window.location.href = '/cart'; }}
+            className="fixed bottom-4 right-4  !bg-luxury-gold !text-luxury-dark"
+            threshold={300}
+          >
+            <ShoppingBag size={24} />
+            <span className="absolute -top-1 -right-1 bg-luxury-danger text-luxury-dark text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+              {itemCount}
+            </span>
+          </FloatingButton>
+        )}
+        {/* <CountCartButton /> */}
       </div>
       <AddToCartModal
         isOpen={showModal}

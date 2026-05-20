@@ -11,6 +11,7 @@ export default {
           silver: "#c0c0c0",
           cream: "#f5f1e8",
           charcoal: "#2a2a2a",
+          danger: "#ff4d4d",
         },
       },
       fontFamily: {

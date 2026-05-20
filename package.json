@@ -19,7 +19,7 @@
     "i18next-browser-languagedetector": "^7.2.0",
     "i18next-http-backend": "^4.0.0",
     "lucide-react": "^1.16.0",
-    "luna-components-library": "^1.1.48",
+    "luna-components-library": "^1.1.50",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-i18next": "^14.0.0",
