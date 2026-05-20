@@ -7,17 +7,13 @@ export default function Cart() {
   const { t } = useTranslation();
   const { items, removeItem, updateQuantity, total, clearCart } = useCart();
 
-  const PROFIT_MARGIN = 0.25;
-  const profitAmount = total * PROFIT_MARGIN;
-  const subtotalWithProfit = total + profitAmount;
-
   const taxAmount = items.reduce((sum, item) => {
     console.log('Cart item:', item.name, 'taxes:', item.taxes);
     const itemTax = (item.taxes && item.taxes > 0) ? (item.price * item.quantity * item.taxes / 100) : 0;
     return sum + itemTax;
   }, 0);
 
-  const grandTotal = subtotalWithProfit + taxAmount;
+  const grandTotal = total + taxAmount;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
@@ -81,10 +77,6 @@ export default function Cart() {
                   <div className="flex justify-between text-sm">
                     <span>{t('cart.subtotal')}</span>
                     <span>${total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>{t('cart.serviceFee')}</span>
-                    <span>${profitAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>{t('cart.tax')}</span>

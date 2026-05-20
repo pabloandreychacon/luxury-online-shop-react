@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 
 export default function CountCartButton() {
   const [isVisible, setIsVisible] = useState(false);
-  const { pathname } = useLocation();
+  //const { pathname } = useLocation();
   const { itemCount } = useCart();
 
   /** Scroll to top when pathname changes */

@@ -82,11 +82,11 @@ export default function Header() {
 
           {/* Right Icons */}
           <div className="flex items-center space-x-4">
-            {/* Language Select */}
+            {/* Language Select - Desktop */}
             <select
               value={i18n.language}
               onChange={(e) => i18n.changeLanguage(e.target.value)}
-              className="text-sm font-semibold bg-transparent text-gray-700 dark:text-gray-300 hover:text-luxury-gold focus:outline-none cursor-pointer"
+              className="hidden md:block text-sm font-semibold bg-transparent text-gray-700 dark:text-gray-300 hover:text-luxury-gold focus:outline-none cursor-pointer"
             >
               {langOptions.map((l) => (
                 <option key={l.code} value={l.code}>{l.label}</option>
@@ -196,6 +196,18 @@ export default function Header() {
                 {t('nav.account')}
               </Link>
             )}
+            {/* Language Select */}
+            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <select
+                value={i18n.language}
+                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                className="w-full text-sm font-semibold bg-transparent text-gray-700 dark:text-gray-300 hover:text-luxury-gold focus:outline-none cursor-pointer py-1"
+              >
+                {langOptions.map((l) => (
+                  <option key={l.code} value={l.code}>{l.label}</option>
+                ))}
+              </select>
+            </div>
           </nav>
         )}
       </div>
