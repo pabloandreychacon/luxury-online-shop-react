@@ -111,16 +111,12 @@ export default function Checkout() {
           to_email: businessEmail,
           from_email: buyerEmail,
           subject: `New Order #${orderNumber}`,
-          message: `Order Number: ${orderNumber}\n\nCustomer: ${buyerName}\nEmail: ${buyerEmail}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}\nService Fee (25%): $${profitAmount.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`,
+          message: `Order Number: ${orderNumber}\n\nCustomer: ${buyerName}\nEmail: ${buyerEmail}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`,
           name: buyerName
         }
       })
     });
   };
-
-  const PROFIT_MARGIN = 0.25;
-  const profitAmount = total * PROFIT_MARGIN;
-  const subtotalWithProfit = total + profitAmount;
 
   const taxAmount = items.reduce((sum, item) => {
     const itemTax = (item.taxes && item.taxes > 0) ? (item.price * item.quantity * item.taxes / 100) : 0;
@@ -128,7 +124,7 @@ export default function Checkout() {
   }, 0);
 
   const shippingCost = selectedShipping?.Price || 0;
-  const grandTotal = subtotalWithProfit + taxAmount + shippingCost;
+  const grandTotal = total + taxAmount + shippingCost;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
@@ -209,10 +205,6 @@ export default function Checkout() {
                 <div className="flex justify-between text-sm">
                   <span>{t('cart.subtotal')}</span>
                   <span>${total.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>{t('cart.serviceFee')}</span>
-                  <span>${profitAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>{t('cart.tax')}</span>
