@@ -29,11 +29,14 @@ export default function Checkout() {
   const [orderNumber, setOrderNumber] = useState(0);
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !showSuccessModal) {
       navigate('/cart');
     }
+  }, [items, showSuccessModal, navigate]);
+
+  useEffect(() => {
     loadData();
-  }, [items, navigate]);
+  }, []);
 
   const loadData = async () => {
     const settings = await getSettings();
@@ -96,26 +99,28 @@ export default function Checkout() {
   };
 
   const sendOrderEmail = async (orderNumber: number, buyerName: string, buyerEmail: string, shippingAddress: string) => {
-    const itemsList = items.map(item => 
+    const itemsList = items.map(item =>
       `${item.name} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`
     ).join('\n');
 
-    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        service_id: 'service_s481rtv',
-        template_id: 'template_771ecr6',
-        user_id: 'L7o6hZUmFJQ_Jbqu0',
-        template_params: {
-          to_email: businessEmail,
-          from_email: buyerEmail,
-          subject: `New Order #${orderNumber}`,
-          message: `Order Number: ${orderNumber}\n\nCustomer: ${buyerName}\nEmail: ${buyerEmail}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`,
-          name: buyerName
-        }
-      })
-    });
+    const orderSummary = `Order Number: ${orderNumber}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`;
+
+    const sendEmail = (toEmail: string, subject: string, message: string) =>
+      fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: 'service_s481rtv',
+          template_id: 'template_771ecr6',
+          user_id: 'L7o6hZUmFJQ_Jbqu0',
+          template_params: { to_email: toEmail, from_email: buyerEmail, subject, message, name: buyerName },
+        }),
+      });
+
+    await Promise.all([
+      sendEmail(businessEmail, `New Order #${orderNumber}`, `Customer: ${buyerName}\nEmail: ${buyerEmail}\n\n${orderSummary}`),
+      sendEmail(buyerEmail, `Your Order #${orderNumber} Confirmation`, `Hi ${buyerName},\n\nThank you for your purchase! Here are your order details:\n\n${orderSummary}\n\nWe will notify you once your order ships.`),
+    ]);
   };
 
   const taxAmount = items.reduce((sum, item) => {
@@ -248,9 +253,10 @@ export default function Checkout() {
 
                       if (orderId) {
                         await sendOrderEmail(orderId, buyerName, buyerEmail, shippingAddress);
-                        clearCart();
                         setOrderNumber(orderId);
                         setShowSuccessModal(true);
+                        localStorage.removeItem('cart');
+                        await clearCart(user?.id);
                       }
                     }}
                   />

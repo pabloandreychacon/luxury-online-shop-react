@@ -46,6 +46,9 @@ export default function Orders() {
     { id: 4, label: t('admin.orderStatusCancelled') }
   ];
 
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestEmailInput, setGuestEmailInput] = useState('');
+
   useEffect(() => {
     if (user?.id) {
       loadOrders();
@@ -66,17 +69,30 @@ export default function Orders() {
     setFilteredOrders(filtered);
   }, [orders, dateFilter]);
 
-  const loadOrders = async () => {
-    if (!user?.id) return;
-    
-    const { data } = await supabase
+  const loadOrders = async (emailOverride?: string) => {
+    let query = supabase
       .from('Orders')
       .select('*')
       .eq('IdBusiness', defaultSettings.id)
-      .eq('UserId', user.id)
       .order('CreatedAt', { ascending: false });
+
+    if (user?.id) {
+      query = query.or(`UserId.eq.${user.id},BuyerEmail.eq.${user.email}`);
+    } else {
+      const email = emailOverride || guestEmail;
+      if (!email) return;
+      query = query.eq('BuyerEmail', email);
+    }
+
+    const { data } = await query;
     setOrders(data || []);
     setFilteredOrders(data || []);
+  };
+
+  const handleGuestSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuestEmail(guestEmailInput);
+    loadOrders(guestEmailInput);
   };
 
   const toggleOrderItems = async (orderId: number) => {
@@ -100,12 +116,27 @@ export default function Orders() {
     return ORDER_STATUSES.find(s => s.id === statusId)?.label || 'Unknown';
   };
 
-  if (!user) {
+  if (!user && !guestEmail) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
-        <div className="container-luxury text-center py-20">
-          <h1 className="text-3xl font-luxury mb-4">Please Login</h1>
-          <p className="text-gray-600 dark:text-gray-400">You need to be logged in to view your orders.</p>
+        <div className="container-luxury max-w-md mx-auto text-center py-20">
+          <h1 className="text-3xl font-luxury mb-4">My Orders</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            Login to see your orders, or enter the email used during checkout.
+          </p>
+          <form onSubmit={handleGuestSearch} className="flex flex-col gap-4">
+            <input
+              type="email"
+              required
+              placeholder="Email used at checkout"
+              value={guestEmailInput}
+              onChange={(e) => setGuestEmailInput(e.target.value)}
+              className="px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold outline-none"
+            />
+            <button type="submit" className="btn-primary">
+              Search Orders
+            </button>
+          </form>
         </div>
       </div>
     );
