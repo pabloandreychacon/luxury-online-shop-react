@@ -3,7 +3,6 @@ import { Menu, X, ShoppingBag, Heart, Moon, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getSettings, getBusinessLanguages } from '../data/settings';
@@ -20,7 +19,6 @@ export default function Header() {
   const [langOptions, setLangOptions] = useState(defaultLangOptions);
   const { itemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
-  const { user, logout } = useAuth();
   const { isDark, toggleDarkMode } = useTheme();
 
   useEffect(() => {
@@ -126,23 +124,6 @@ export default function Header() {
             <Link to="/orders" className="hidden md:inline-flex text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
               {t('nav.orders')}
             </Link>
-            {user ? (
-              <div className="hidden md:flex items-center space-x-2">
-                <Link to="/profile" className="text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
-                  {user.firstName}
-                </Link>
-                <button
-                  onClick={() => logout()}
-                  className="text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition"
-                >
-                  {t('nav.logout')}
-                </button>
-              </div>
-            ) : (
-              <Link to="/login" className="hidden md:inline-flex text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
-                {t('nav.account')}
-              </Link>
-            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -181,22 +162,6 @@ export default function Header() {
             <Link to="/orders" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
               {t('nav.orders')}
             </Link>
-            {user ? (
-              <>
-                <Link to="/profile" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
-                  {t('profile.title')}
-                </Link>
-                <button
-                  className="w-full text-left block text-gray-700 dark:text-gray-300 hover:text-luxury-gold"
-                >
-                  {t('nav.logout')}
-                </button>
-              </>
-            ) : (
-              <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
-                {t('nav.account')}
-              </Link>
-            )}
             {/* Language Select */}
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
               <select

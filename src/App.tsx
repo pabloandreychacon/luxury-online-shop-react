@@ -5,7 +5,6 @@ import { FloatingButton, ScrollTop } from 'luna-components-library';
 import AddToCartModal from './components/AddToCartModal';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from './store/useAuthStore';
 import { useCartStore } from './store/useCartStore';
 import { getSettings } from './data/settings';
 import { WhatsApp } from "luna-components-library";
@@ -14,33 +13,24 @@ import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import Admin from './pages/Admin';
 import Checkout from './pages/Checkout';
-import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import { useCart } from './context/CartContext';
 import { ShoppingBag } from 'lucide-react';
 
 function AppContent() {
-  const { showModal, lastAddedProduct, closeModal, loadFromStorage, loadFromSupabase } = useCartStore();
-  const { checkAuth, user } = useAuthStore();
+  const { showModal, lastAddedProduct, closeModal, loadFromStorage } = useCartStore();
   const [searchParams] = useSearchParams();
   const { i18n, t } = useTranslation();
   const [whatsappPhone, setWhatsappPhone] = useState('');
   const { itemCount } = useCart();
 
   useEffect(() => {
-    checkAuth();
     loadFromStorage();
   }, []);
-
-  useEffect(() => {
-    if (user?.id) loadFromSupabase(user.id);
-  }, [user?.id]);
 
   useEffect(() => {
     const lang = searchParams.get('lang');
@@ -66,14 +56,11 @@ function AppContent() {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/wishlist" element={<Wishlist />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<Orders />} />
-            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
         <Footer />

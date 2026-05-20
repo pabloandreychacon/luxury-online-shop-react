@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -19,7 +18,6 @@ interface ShippingMethod {
 export default function Checkout() {
   const { t } = useTranslation();
   const { items, removeItem, updateQuantity, total, clearCart } = useCart();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
@@ -59,12 +57,10 @@ export default function Checkout() {
     const estimatedDelivery = new Date();
     estimatedDelivery.setDate(estimatedDelivery.getDate() + (selectedShipping?.DeliveryDays || 0));
 
-    const userId = user?.id || null;
-
     const { data: orderData, error: orderError } = await supabase
       .from('Orders')
       .insert([{
-        UserId: userId,
+        UserId: null,
         TotalAmount: grandTotal,
         StatusId: 1,
         PaymentOrderId: paypalOrderId,
@@ -256,7 +252,7 @@ export default function Checkout() {
                         setOrderNumber(orderId);
                         setShowSuccessModal(true);
                         localStorage.removeItem('cart');
-                        await clearCart(user?.id);
+                        clearCart();
                       }
                     }}
                   />

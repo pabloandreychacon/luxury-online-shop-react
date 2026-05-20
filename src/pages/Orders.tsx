@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
 
@@ -31,7 +30,6 @@ interface OrderItem {
 
 export default function Orders() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
@@ -50,10 +48,10 @@ export default function Orders() {
   const [guestEmailInput, setGuestEmailInput] = useState('');
 
   useEffect(() => {
-    if (user?.id) {
-      loadOrders();
-    }
-  }, [user?.id]);
+    loadData();
+  }, []);
+
+  const loadData = () => { /* placeholder for future use */ };
 
   useEffect(() => {
     let filtered = orders;
@@ -70,21 +68,14 @@ export default function Orders() {
   }, [orders, dateFilter]);
 
   const loadOrders = async (emailOverride?: string) => {
-    let query = supabase
+    const email = emailOverride || guestEmail;
+    if (!email) return;
+    const { data } = await supabase
       .from('Orders')
       .select('*')
       .eq('IdBusiness', defaultSettings.id)
+      .eq('BuyerEmail', email)
       .order('CreatedAt', { ascending: false });
-
-    if (user?.id) {
-      query = query.or(`UserId.eq.${user.id},BuyerEmail.eq.${user.email}`);
-    } else {
-      const email = emailOverride || guestEmail;
-      if (!email) return;
-      query = query.eq('BuyerEmail', email);
-    }
-
-    const { data } = await query;
     setOrders(data || []);
     setFilteredOrders(data || []);
   };
@@ -116,13 +107,13 @@ export default function Orders() {
     return ORDER_STATUSES.find(s => s.id === statusId)?.label || 'Unknown';
   };
 
-  if (!user && !guestEmail) {
+  if (!guestEmail) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
         <div className="container-luxury max-w-md mx-auto text-center py-20">
           <h1 className="text-3xl font-luxury mb-4">My Orders</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Login to see your orders, or enter the email used during checkout.
+            Enter the email used during checkout to see your orders.
           </p>
           <form onSubmit={handleGuestSearch} className="flex flex-col gap-4">
             <input
