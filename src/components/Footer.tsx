@@ -82,14 +82,24 @@ export default function Footer() {
         {/* Social Links */}
         <div className="border-t border-gray-800 pt-8 mb-8">
           <div className="flex justify-center space-x-6">
-            <a href="#" className="text-gray-400 hover:text-luxury-gold transition">
-              {/* use an F for Facebook */}
-              <Button variant="primary" rounded icon="F" size="sm" className='!font-extrabold' />
+            {/* <a href="#" className="text-gray-400 hover:text-luxury-gold transition">                
+                <Button variant="primary" rounded icon="F" size="sm" className='!font-extrabold' />
+              </a> */}
+            <a href="https://www.instagram.com/luxurywatchgeorge?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw===" className="text-gray-400 hover:text-luxury-gold transition" style={{
+              background: 'radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%)',
+              color: 'white',
+              borderRadius: '20%'
+            }}>
+              {/* use an I for Instagram */}
+              <Button variant="none" rounded icon="I" size="sm" className='!font-extrabold' />
             </a>
-            {/* <a href="#" className="text-gray-400 hover:text-luxury-gold transition">
-              <Instagram size={20} />
+            {/* tiktok */}
+            <a href="https://www.tiktok.com/@luxury.watch464?_r=1&_t=ZS-96Tzh3TfI5Y" className="text-gray-400 hover:text-luxury-gold transition"
+              style={{ background: "black", color: 'white', borderRadius: '20%', border: '1px solid white' }}>
+              {/* use a T for TikTok */}
+              <Button variant="none" rounded icon="t" size="sm" className='!font-extrabold !text-white' />
             </a>
-            <a href="#" className="text-gray-400 hover:text-luxury-gold transition">
+            {/*<a href="#" className="text-gray-400 hover:text-luxury-gold transition">
               <Twitter size={20} />
             </a> */}
           </div>
