@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingBag, Heart, ArrowLeft, Share2, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { Product } from '../lib/types';
+import type { Product } from '../lib/types';
 import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
 
@@ -337,22 +337,7 @@ export default function ProductDetail() {
               </p>
             </div>
 
-            {/* Stock Status */}
-            <div className="mb-8">
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-lg w-fit ${product.inStock
-                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                }`}>
-                {product.inStock ? (
-                  <>
-                    <Check size={18} />
-                    <span className="font-semibold">{t('product.inStock')}</span>
-                  </>
-                ) : (
-                  <span className="font-semibold">{t('product.outOfStock')}</span>
-                )}
-              </div>
-            </div>
+            {/* Stock Status removed - Active products are always available */}
 
             {/* Product Details */}
             <div className="space-y-4 mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
@@ -382,7 +367,7 @@ export default function ProductDetail() {
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
                     className="w-20 px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-center"
-                    disabled={!product.inStock}
+                    disabled={false}
                   />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {t('product.maxPerOrder')}
@@ -392,11 +377,7 @@ export default function ProductDetail() {
 
               <button
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
-                className={`w-full py-4 px-6 rounded-lg flex items-center justify-center gap-3 font-semibold text-lg transition ${product.inStock
-                  ? 'bg-luxury-gold text-luxury-dark hover:bg-opacity-90'
-                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                  }`}
+                className="w-full py-4 px-6 rounded-lg flex items-center justify-center gap-3 font-semibold text-lg transition bg-luxury-gold text-luxury-dark hover:bg-opacity-90"
               >
                 {showAdded ? (
                   <>

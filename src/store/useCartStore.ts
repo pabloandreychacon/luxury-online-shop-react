@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CartItem, Product } from '../lib/types';
+import type { CartItem, Product } from '../lib/types';
 import { supabase } from '../lib/supabase';
 import i18n from 'i18next';
 import { defaultSettings } from '../data/settings';

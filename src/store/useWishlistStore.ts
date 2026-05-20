@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Product } from '../lib/types';
+import type { Product } from '../lib/types';
 
 interface WishlistStore {
   wishlistItems: Product[];

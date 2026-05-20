@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import { Product } from '../lib/types';
+import type { Product } from '../lib/types';
 import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
 

@@ -1,13 +1,12 @@
 export interface Product {
   id: string;
   name: string;
-  category: 'bag' | 'scarf' | 'watch';
+  category: 'bag' | 'scarf' | 'watch' | string;
   price: number;
   image: string;
   description: string;
   material: string;
   dimensions?: string;
-  inStock: boolean;
   rating: number;
   reviews: number;
   taxes?: number;

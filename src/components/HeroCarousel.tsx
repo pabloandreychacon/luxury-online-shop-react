@@ -27,7 +27,7 @@ interface OfferProduct {
 }
 
 const HeroCarousel = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<OfferProduct[]>([]);
   const [loading, setLoading] = useState(true);

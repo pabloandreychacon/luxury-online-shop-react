@@ -110,7 +110,7 @@ export default function Cart() {
 
                 {items.length > 0 && (
                   <button
-                    onClick={clearCart}
+                    onClick={() => clearCart()}
                     className="block text-center w-full text-sm text-red-500 hover:text-red-700 transition mt-4"
                   >
                     {t('cart.clearCart')}

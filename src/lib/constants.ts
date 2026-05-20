@@ -1,5 +1,5 @@
 // Mock data until connected to real database
-import { Product } from '../lib/types';
+import type { Product } from '../lib/types';
 
 export const FEATURED_PRODUCTS: Product[] = [
   {
@@ -10,7 +10,6 @@ export const FEATURED_PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&h=600&fit=crop',
     description: 'Timeless Italian leather tote with gold hardware and silk lining',
     material: 'Premium Italian Leather',
-    inStock: true,
     rating: 4.8,
     reviews: 124,
   },
@@ -22,7 +21,6 @@ export const FEATURED_PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=500&h=600&fit=crop',
     description: 'Hand-painted silk scarf from French artisans with artistic designs',
     material: '100% Pure Mulberry Silk',
-    inStock: true,
     rating: 4.9,
     reviews: 89,
   },
@@ -35,7 +33,6 @@ export const FEATURED_PRODUCTS: Product[] = [
     description: 'Swiss automatic movement with sapphire crystal and chronograph function',
     material: 'Stainless Steel',
     dimensions: '42mm diameter, 13mm thickness',
-    inStock: true,
     rating: 4.9,
     reviews: 156,
   },

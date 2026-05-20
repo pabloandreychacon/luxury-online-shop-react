@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getSettings } from '../data/settings';
+import { Button, QRCode } from "luna-components-library";
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -11,6 +12,7 @@ export default function Footer() {
   const [email, setEmail] = useState('info@businessname.com');
   const [phone, setPhone] = useState('+1 (234) 567-890');
   const [address, setAddress] = useState('123 Fashion Ave, NY');
+  const [urlQrCode, setUrlQrCode] = useState('');
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -19,6 +21,8 @@ export default function Footer() {
       setEmail(settings.email);
       setPhone(settings.phone);
       setAddress(settings.address);
+      setUrlQrCode(settings.finalUrl || '');
+      console.log('Loaded settings in Footer:', settings);
     };
     loadSettings();
   }, []);
@@ -79,7 +83,8 @@ export default function Footer() {
         <div className="border-t border-gray-800 pt-8 mb-8">
           <div className="flex justify-center space-x-6">
             <a href="#" className="text-gray-400 hover:text-luxury-gold transition">
-              <Facebook size={20} />
+              {/* use an F for Facebook */}
+              <Button variant="primary" rounded icon="F" size="sm" className='!font-extrabold' />
             </a>
             {/* <a href="#" className="text-gray-400 hover:text-luxury-gold transition">
               <Instagram size={20} />
@@ -89,6 +94,13 @@ export default function Footer() {
             </a> */}
           </div>
         </div>
+
+        {/* QR Code Section */}
+        {urlQrCode && (
+          <div className="border-t border-gray-800 pt-8 flex flex-col justify-between items-center text-sm text-gray-400 mb-5">
+            <QRCode value={urlQrCode} size={150} className="mx-auto" />
+          </div>
+        )}
 
         {/* Bottom */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">

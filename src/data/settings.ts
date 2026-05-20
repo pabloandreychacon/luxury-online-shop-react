@@ -10,6 +10,7 @@ export interface BusinessSettings {
   longitude: number;
   onlinePassword: string;
   paypalClientId?: string;
+  finalUrl?: string;
   exchangeRate?: number;
   currencyCode?: string;
   languageFormat?: string;
@@ -32,6 +33,7 @@ export const defaultSettings: BusinessSettings = {
   longitude: -84.099413,
   onlinePassword: '',
   paypalClientId: '',
+  finalUrl: '',
   exchangeRate: 1,
   currencyCode: 'USD',
   languageFormat: 'en-US',
@@ -41,7 +43,7 @@ export async function getSettings(): Promise<BusinessSettings> {
   try {
     const { data, error } = await supabase
       .from('Settings')
-      .select('Email, Phone, Address, BusinessName, MapLocation, OnlinePassword, PaypalClientId, ExchangeRate, CurrencyCode, LanguageFormat')
+      .select('Email, Phone, Address, BusinessName, MapLocation, OnlinePassword, PaypalClientId, ExchangeRate, CurrencyCode, LanguageFormat, FinalUrl')
       .eq('Id', defaultSettings.id)
       .maybeSingle();
 
@@ -76,6 +78,7 @@ export async function getSettings(): Promise<BusinessSettings> {
       exchangeRate: (data.ExchangeRate as number) ?? defaultSettings.exchangeRate,
       currencyCode: (data.CurrencyCode as string) ?? defaultSettings.currencyCode,
       languageFormat: (data.LanguageFormat as string) ?? defaultSettings.languageFormat,
+      finalUrl: (data.FinalUrl as string) ?? defaultSettings.finalUrl,
     };
   } catch (err) {
     console.error('getSettings unexpected error', err);

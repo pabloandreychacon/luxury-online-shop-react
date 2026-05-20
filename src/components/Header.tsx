@@ -96,14 +96,14 @@ export default function Header() {
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition"
+              className="hidden md:inline-flex p-2 text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition"
               title={t('common.darkMode')}
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
+            <Link to="/wishlist" className="hidden md:inline-flex relative p-2 text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
               <Heart size={20} />
               {wishlistCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-luxury-gold text-luxury-dark text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
@@ -113,7 +113,7 @@ export default function Header() {
             </Link>
 
             {/* Cart */}
-            <Link to="/cart" className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
+            <Link to="/cart" className="hidden md:inline-flex relative p-2 text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
               <ShoppingBag size={20} />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-luxury-gold text-luxury-dark text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
@@ -124,7 +124,7 @@ export default function Header() {
 
             {/* Account */}
             {user ? (
-              <div className="hidden sm:flex items-center space-x-2">
+              <div className="hidden md:flex items-center space-x-2">
                 <Link to="/orders" className="text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
                   Orders
                 </Link>
@@ -137,7 +137,7 @@ export default function Header() {
                 </button>
               </div>
             ) : (
-              <Link to="/login" className="text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
+              <Link to="/login" className="hidden md:inline-flex text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
                 {t('nav.account')}
               </Link>
             )}
@@ -155,24 +155,45 @@ export default function Header() {
         {/* Mobile Navigation */}
         {menuOpen && (
           <nav className="md:hidden mt-4 pb-4 border-t border-gray-200 dark:border-gray-800 pt-4 space-y-4">
-            <Link to="/" className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+            <Link to="/" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
               {t('nav.home')}
             </Link>
-            <Link to="/shop" className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+            <Link to="/shop" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
               {t('nav.shop')}
             </Link>
-            <Link to="/about" className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+            <Link to="/about" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
               {t('nav.about')}
             </Link>
-            <Link to="/contact" className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+            <Link to="/contact" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
               {t('nav.contact')}
             </Link>
-            <Link to="/admin" className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+            <Link to="/admin" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
               Admin
             </Link>
-            {user && (
-              <Link to="/orders" className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
-                Orders
+            <Link to="/wishlist" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+              {t('nav.wishlist')}
+            </Link>
+            <Link to="/cart" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+              {t('nav.cart')}
+            </Link>
+            {user ? (
+              <>
+                <Link to="/orders" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+                  Orders
+                </Link>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    logout();
+                  }}
+                  className="w-full text-left block text-gray-700 dark:text-gray-300 hover:text-luxury-gold"
+                >
+                  {t('nav.logout')}
+                </button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+                {t('nav.account')}
               </Link>
             )}
           </nav>

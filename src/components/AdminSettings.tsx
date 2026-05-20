@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import bcryptjs from 'bcryptjs';
 import { supabase } from '../lib/supabase';
-import { getSettings, defaultSettings, getBusinessLanguages, BusinessLanguage } from '../data/settings';
+import { getSettings, defaultSettings, getBusinessLanguages } from '../data/settings';
+import type { BusinessLanguage } from '../data/settings';
 
 export default function AdminSettings() {
   const { t } = useTranslation();

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User, AuthState } from '../lib/types';
+import type { User, AuthState } from '../lib/types';
 import { supabase } from '../lib/supabase';
 import bcrypt from 'bcryptjs';
 

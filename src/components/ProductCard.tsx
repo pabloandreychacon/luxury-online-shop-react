@@ -1,4 +1,4 @@
-import { Product } from '../lib/types';
+import type { Product } from '../lib/types';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Heart } from 'lucide-react';
@@ -33,11 +33,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition duration-300 cursor-pointer"
         />
-        {!product.inStock && (
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-            <p className="text-white text-xl font-semibold">{t('product.outOfStock')}</p>
-          </div>
-        )}
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -93,15 +88,10 @@ export default function ProductCard({ product }: ProductCardProps) {
             value={quantity}
             onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
             className="w-16 px-2 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-sm"
-            disabled={!product.inStock}
           />
           <button
             onClick={handleAddToCart}
-            disabled={!product.inStock}
-            className={`flex-1 py-2 px-3 rounded flex items-center justify-center gap-2 transition ${product.inStock
-              ? 'bg-luxury-gold text-luxury-dark hover:bg-opacity-90 font-semibold'
-              : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-              }`}
+            className="flex-1 py-2 px-3 rounded flex items-center justify-center gap-2 transition bg-luxury-gold text-luxury-dark hover:bg-opacity-90 font-semibold"
           >
             <ShoppingBag size={16} />
             {showAdded ? '✓' : t('product.addToCart')}

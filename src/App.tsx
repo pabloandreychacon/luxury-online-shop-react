@@ -3,10 +3,12 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import AddToCartModal from './components/AddToCartModal';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from './store/useAuthStore';
 import { useCartStore } from './store/useCartStore';
+import { getSettings } from './data/settings';
+import { WhatsApp } from "luna-components-library";
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
@@ -24,7 +26,8 @@ function AppContent() {
   const { showModal, lastAddedProduct, closeModal, loadFromStorage, loadFromSupabase } = useCartStore();
   const { checkAuth, user } = useAuthStore();
   const [searchParams] = useSearchParams();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const [whatsappPhone, setWhatsappPhone] = useState('');
 
   useEffect(() => {
     checkAuth();
@@ -37,8 +40,16 @@ function AppContent() {
 
   useEffect(() => {
     const lang = searchParams.get('lang');
-    if (lang && (lang === 'en' || lang === 'es')) i18n.changeLanguage(lang);
+    if (lang && (lang === 'en' || lang === 'es' || lang === 'zh')) i18n.changeLanguage(lang);
   }, [searchParams, i18n]);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const settings = await getSettings();
+      setWhatsappPhone((settings.phone || '').replace(/\D/g, ''));
+    };
+    loadSettings();
+  }, []);
 
   return (
     <>
@@ -68,6 +79,15 @@ function AppContent() {
         onClose={closeModal}
         productName={lastAddedProduct}
       />
+      {whatsappPhone && (
+        <WhatsApp className="fixed bottom-4 right-4"
+          phone={whatsappPhone}
+          message={t('contact.whatsappMessage')}
+          position="bottom-left"
+          tooltipText={t('contact.whatsapp')}
+          zIndex={9999}
+        />
+      )}
     </>
   );
 }

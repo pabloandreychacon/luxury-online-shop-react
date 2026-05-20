@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
 import HeroCarousel from '../components/HeroCarousel';
 import ProductCard from '../components/ProductCard';
-import { Product } from '../lib/types';
+import type { Product } from '../lib/types';
 
 interface Category {
   Id: string;

@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X, Check, ShoppingBag } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
 interface AddToCartModalProps {
   isOpen: boolean;
@@ -10,7 +9,6 @@ interface AddToCartModalProps {
 }
 
 export default function AddToCartModal({ isOpen, onClose, productName }: AddToCartModalProps) {
-  const { t } = useTranslation();
 
   useEffect(() => {
     if (isOpen) {

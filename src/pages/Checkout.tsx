@@ -233,10 +233,12 @@ export default function Checkout() {
                 <PayPalScriptProvider options={{ clientId: paypalClientId, currency: 'USD' }}>
                   <PayPalButtons
                     style={{ layout: 'vertical' }}
-                    createOrder={(data, actions) => {
+                    createOrder={(_data, actions) => {
                       return actions.order.create({
+                        intent: 'CAPTURE',
                         purchase_units: [{
                           amount: {
+                            currency_code: 'USD',
                             value: grandTotal.toFixed(2),
                           },
                         }],
@@ -246,12 +248,12 @@ export default function Checkout() {
                       const details = await actions.order?.capture();
                       const buyerName = `${details?.payer?.name?.given_name} ${details?.payer?.name?.surname}`;
                       const buyerEmail = details?.payer?.email_address || '';
-                      const shippingAddress = details?.purchase_units?.[0]?.shipping?.address ? 
-                        `${details.purchase_units[0].shipping.address.address_line_1}, ${details.purchase_units[0].shipping.address.admin_area_2}, ${details.purchase_units[0].shipping.address.admin_area_1} ${details.purchase_units[0].shipping.address.postal_code}` : 
+                      const shippingAddress = details?.purchase_units?.[0]?.shipping?.address ?
+                        `${details.purchase_units[0].shipping.address.address_line_1}, ${details.purchase_units[0].shipping.address.admin_area_2}, ${details.purchase_units[0].shipping.address.admin_area_1} ${details.purchase_units[0].shipping.address.postal_code}` :
                         'N/A';
 
                       const orderId = await saveOrder(data.orderID, buyerEmail, shippingAddress);
-                      
+
                       if (orderId) {
                         await sendOrderEmail(orderId, buyerName, buyerEmail, shippingAddress);
                         clearCart();

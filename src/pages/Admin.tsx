@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import bcryptjs from 'bcryptjs';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { getSettings, defaultSettings, BusinessSettings } from '../data/settings';
+import { getSettings, defaultSettings } from '../data/settings';
+import type { BusinessSettings } from '../data/settings';
 import AdminSettings from '../components/AdminSettings';
 import AdminProducts from '../components/AdminProducts';
 import AdminCategories from '../components/AdminCategories';
@@ -16,7 +17,7 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'settings' | 'products' | 'categories' | 'brands' | 'shipping' | 'orders'>('settings');
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
 
   useEffect(() => {
