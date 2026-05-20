@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /about
+Allow: /contact
+Allow: /product/
+
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /login
+Disallow: /signup
+Disallow: /wishlist
+
+Sitemap: https://luxuryonline.netlify.app/sitemap.xml
