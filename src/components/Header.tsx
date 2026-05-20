@@ -123,12 +123,14 @@ export default function Header() {
             </Link>
 
             {/* Account */}
+            <Link to="/orders" className="hidden md:inline-flex text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
+              {t('nav.orders')}
+            </Link>
             {user ? (
               <div className="hidden md:flex items-center space-x-2">
-                <Link to="/orders" className="text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
-                  Orders
+                <Link to="/profile" className="text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition">
+                  {user.firstName}
                 </Link>
-                <span className="text-sm text-gray-700 dark:text-gray-300">{user.firstName}</span>
                 <button
                   onClick={() => logout()}
                   className="text-sm text-gray-700 dark:text-gray-300 hover:text-luxury-gold transition"
@@ -176,16 +178,15 @@ export default function Header() {
             <Link to="/cart" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
               {t('nav.cart')}
             </Link>
+            <Link to="/orders" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+              {t('nav.orders')}
+            </Link>
             {user ? (
               <>
-                <Link to="/orders" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
-                  Orders
+                <Link to="/profile" onClick={() => setMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 hover:text-luxury-gold">
+                  {t('profile.title')}
                 </Link>
                 <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    logout();
-                  }}
                   className="w-full text-left block text-gray-700 dark:text-gray-300 hover:text-luxury-gold"
                 >
                   {t('nav.logout')}

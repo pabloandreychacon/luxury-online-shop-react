@@ -20,6 +20,7 @@ import Contact from './pages/Contact';
 import About from './pages/About';
 import Admin from './pages/Admin';
 import Checkout from './pages/Checkout';
+import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import { useCart } from './context/CartContext';
 import { ShoppingBag } from 'lucide-react';
@@ -72,6 +73,7 @@ function AppContent() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
         <Footer />
