@@ -22,7 +22,6 @@ export default function Footer() {
       setPhone(settings.phone);
       setAddress(settings.address);
       setUrlQrCode(settings.finalUrl || '');
-      console.log('Loaded settings in Footer:', settings);
     };
     loadSettings();
   }, []);

@@ -2,13 +2,16 @@ import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
+import { logger } from 'luna-components-library';
 
 export default function Cart() {
   const { t } = useTranslation();
   const { items, removeItem, updateQuantity, total, clearCart } = useCart();
 
   const taxAmount = items.reduce((sum, item) => {
-    console.log('Cart item:', item.name, 'taxes:', item.taxes);
+    if (import.meta.env.DEV) {
+      logger.info('Cart item:', item.name, 'taxes:', item.taxes);
+    }
     const itemTax = (item.taxes && item.taxes > 0) ? (item.price * item.quantity * item.taxes / 100) : 0;
     return sum + itemTax;
   }, 0);
