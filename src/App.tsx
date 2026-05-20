@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import ScrollToTop from './components/ScrollToTop';
+import { ScrollTop } from 'luna-components-library';
 import AddToCartModal from './components/AddToCartModal';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,7 @@ import About from './pages/About';
 import Admin from './pages/Admin';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
+import CountCartButton from './components/CountCartButton';
 
 function AppContent() {
   const { showModal, lastAddedProduct, closeModal, loadFromStorage, loadFromSupabase } = useCartStore();
@@ -72,7 +73,8 @@ function AppContent() {
           </Routes>
         </main>
         <Footer />
-        <ScrollToTop />
+        <ScrollTop threshold={300} position="bottom-right" />
+        <CountCartButton />
       </div>
       <AddToCartModal
         isOpen={showModal}
