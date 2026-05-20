@@ -33,35 +33,39 @@ export default function Cart() {
             <div className="lg:col-span-2">
               <div className="space-y-6">
                 {items.map(item => (
-                  <div key={item.id} className="card-luxury p-6 rounded-lg flex gap-6">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-24 h-24 object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-luxury text-lg mb-2">{item.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{item.material}</p>
-                      <p className="font-luxury text-luxury-gold text-lg">${item.price.toFixed(2)}</p>
-                    </div>
-                    <div className="flex flex-col items-end justify-between">
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="text-red-500 hover:text-red-700 transition"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={item.quantity}
-                        onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                        className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center"
+                  <div key={item.id} className="card-luxury p-4 rounded-lg">
+                    <div className="flex gap-4">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-20 h-20 object-cover rounded flex-shrink-0"
                       />
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-luxury text-base leading-tight">{item.name}</h3>
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="text-red-500 hover:text-red-700 transition flex-shrink-0"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.material}</p>
+                        <p className="font-luxury text-luxury-gold mt-1">${item.price.toFixed(2)}</p>
+                        <div className="flex items-center justify-between mt-2">
+                          <input
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={item.quantity}
+                            onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                            className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center text-sm"
+                          />
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            ${(item.price * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}

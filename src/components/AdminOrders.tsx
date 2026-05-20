@@ -140,26 +140,26 @@ export default function AdminOrders() {
       {filteredOrders.map((order) => (
         <div key={order.Id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
           <div className="space-y-4">
-            <div className="flex justify-between items-start border-b border-gray-200 dark:border-gray-700 pb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Order #{order.Id}
-                  </h3>
-                  <button
-                    onClick={() => toggleOrderItems(order.Id)}
-                    className="text-sm text-luxury-gold hover:text-opacity-80 font-medium"
-                  >
-                    {expandedOrders.has(order.Id) ? 'Hide Items' : 'Show Items'}
-                  </button>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {order.BuyerEmail} • ${order.TotalAmount}
-                </p>
+            <div className="flex flex-col gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Order #{order.Id}
+                </h3>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {new Date(order.CreatedAt).toLocaleDateString()}
+                </span>
               </div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                {new Date(order.CreatedAt).toLocaleDateString()}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => toggleOrderItems(order.Id)}
+                  className="text-sm text-luxury-gold hover:text-opacity-80 font-medium"
+                >
+                  {expandedOrders.has(order.Id) ? 'Hide Items' : 'Show Items'}
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {order.BuyerEmail} • ${order.TotalAmount}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

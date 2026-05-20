@@ -145,35 +145,35 @@ export default function Orders() {
             {filteredOrders.map((order) => (
               <div key={order.Id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
                 <div className="space-y-4">
-                  <div className="flex justify-between items-start border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          Order #{order.Id}
-                        </h3>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          order.StatusId === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                          order.StatusId === 2 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                          order.StatusId === 3 ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
-                          order.StatusId === 4 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                        }`}>
-                          {getStatusLabel(order.StatusId)}
-                        </span>
-                        <button
-                          onClick={() => toggleOrderItems(order.Id)}
-                          className="text-sm text-luxury-gold hover:text-opacity-80 font-medium"
-                        >
-                          {expandedOrders.has(order.Id) ? 'Hide Items' : 'Show Items'}
-                        </button>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Total: ${order.TotalAmount.toFixed(2)}
-                      </p>
+                <div className="flex flex-col gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Order #{order.Id}
+                      </h3>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {new Date(order.CreatedAt).toLocaleDateString()}
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(order.CreatedAt).toLocaleDateString()}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        order.StatusId === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                        order.StatusId === 2 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                        order.StatusId === 3 ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                        order.StatusId === 4 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                      }`}>
+                        {getStatusLabel(order.StatusId)}
+                      </span>
+                      <button
+                        onClick={() => toggleOrderItems(order.Id)}
+                        className="text-sm text-luxury-gold hover:text-opacity-80 font-medium"
+                      >
+                        {expandedOrders.has(order.Id) ? 'Hide Items' : 'Show Items'}
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Total: ${order.TotalAmount.toFixed(2)}
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
