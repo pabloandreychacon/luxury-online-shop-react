@@ -58,9 +58,10 @@ export default function Admin() {
           user_id: 'L7o6hZUmFJQ_Jbqu0',
           template_params: {
             to_email: settings.email,
-            subject: 'Password Reset - Costa Rica Luxury Admin',
-            message: `Your temporary password is: ${tempPassword}`,
-            name: 'Costa Rica Luxury Admin'
+            from_email: settings.email,
+            subject: 'Password Reset - Admin',
+            message: `Your temporary admin password is: ${tempPassword}\n\nUse this to access the Admin panel. Change it immediately after logging in.`,
+            name: settings.businessName
           }
         })
       });
@@ -209,7 +210,7 @@ export default function Admin() {
           </button>
         </div>
 
-        {activeTab === 'settings' && <AdminSettings />}
+        {activeTab === 'settings' && <AdminSettings onSave={loadSettings} />}
         {activeTab === 'products' && <AdminProducts />}
         {activeTab === 'categories' && <AdminCategories />}
         {activeTab === 'brands' && <AdminBrands />}

@@ -23,6 +23,8 @@ export default function Checkout() {
   const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
   const [paypalClientId, setPaypalClientId] = useState('');
   const [businessEmail, setBusinessEmail] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [businessPhone, setBusinessPhone] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderNumber, setOrderNumber] = useState(0);
 
@@ -40,6 +42,8 @@ export default function Checkout() {
     const settings = await getSettings();
     setPaypalClientId(settings.paypalClientId || '');
     setBusinessEmail(settings.email);
+    setBusinessName(settings.businessName);
+    setBusinessPhone(settings.phone);
 
     const { data } = await supabase
       .from('ShippingMethods')
@@ -101,6 +105,8 @@ export default function Checkout() {
 
     const orderSummary = `Order Number: ${orderNumber}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`;
 
+    const signature = `\n\n---\n${businessName}\n${businessEmail}\n${businessPhone}`;
+
     const sendEmail = (toEmail: string, subject: string, message: string) =>
       fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
@@ -114,8 +120,8 @@ export default function Checkout() {
       });
 
     await Promise.all([
-      sendEmail(businessEmail, `New Order #${orderNumber}`, `Customer: ${buyerName}\nEmail: ${buyerEmail}\n\n${orderSummary}`),
-      sendEmail(buyerEmail, `Your Order #${orderNumber} Confirmation`, `Hi ${buyerName},\n\nThank you for your purchase! Here are your order details:\n\n${orderSummary}\n\nWe will notify you once your order ships.`),
+      sendEmail(businessEmail, `New Order #${orderNumber}`, `Customer: ${buyerName}\nEmail: ${buyerEmail}\n\n${orderSummary}${signature}`),
+      sendEmail(buyerEmail, `Your Order #${orderNumber} Confirmation`, `Hi ${buyerName},\n\nThank you for your purchase! Here are your order details:\n\n${orderSummary}\n\nWe will notify you once your order ships.${signature}`),
     ]);
   };
 

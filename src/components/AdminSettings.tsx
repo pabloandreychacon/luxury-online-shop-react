@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { getSettings, defaultSettings, getBusinessLanguages } from '../data/settings';
 import type { BusinessLanguage } from '../data/settings';
 
-export default function AdminSettings() {
+export default function AdminSettings({ onSave }: { onSave?: () => void }) {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -48,6 +48,9 @@ export default function AdminSettings() {
       .from('Settings')
       .update(updateData)
       .eq('Id', defaultSettings.id);
+
+    await loadSettings();
+    onSave?.();
   };
 
   const handleLanguageChange = (originalCode: string | undefined, field: keyof BusinessLanguage, value: string) => {
@@ -250,7 +253,11 @@ export default function AdminSettings() {
         <input
           type="password"
           placeholder={t('admin.passwordPlaceholder')}
-          onBlur={(e) => e.target.value && handleSave('OnlinePassword', e.target.value)}
+          onBlur={(e) => {
+          if (!e.target.value) return;
+          handleSave('OnlinePassword', e.target.value);
+          e.target.value = '';
+        }}
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
         />
       </div>
