@@ -28,8 +28,10 @@ export default function Checkout() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderNumber, setOrderNumber] = useState(0);
 
+  const [orderCompleted, setOrderCompleted] = useState(false);
+
   useEffect(() => {
-    if (items.length === 0 && !showSuccessModal) {
+    if (items.length === 0 && !showSuccessModal && !orderCompleted) {
       navigate('/cart');
     }
   }, [items, showSuccessModal, navigate]);
@@ -147,7 +149,11 @@ export default function Checkout() {
               <div className="space-y-4">
                 {items.map(item => (
                   <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0">
-                    <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
+                    {item.image?.match(/\.(mp4|webm|ogg)$/i) ? (
+                      <video src={item.image} className="w-20 h-20 object-cover rounded" autoPlay muted loop playsInline />
+                    ) : (
+                      <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
+                    )}
                     <div className="flex-1">
                       <h3 className="font-semibold">{item.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">${item.price.toFixed(2)}</p>
@@ -255,6 +261,7 @@ export default function Checkout() {
                       if (orderId) {
                         await sendOrderEmail(orderId, buyerName, buyerEmail, shippingAddress);
                         setOrderNumber(orderId);
+                        setOrderCompleted(true);
                         setShowSuccessModal(true);
                         localStorage.removeItem('cart');
                         clearCart();

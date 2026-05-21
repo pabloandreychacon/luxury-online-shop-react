@@ -75,11 +75,22 @@ export default function Wishlist() {
               to={`/product/${product.id}`}
               className="relative h-64 bg-gray-200 dark:bg-gray-800 overflow-hidden block"
             >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-              />
+              {product.image?.match(/\.(mp4|webm|ogg)$/i) ? (
+                <video
+                  src={product.image}
+                  className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              ) : (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                />
+              )}
               <button
                 onClick={e => {
                   e.preventDefault();
