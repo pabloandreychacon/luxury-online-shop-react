@@ -151,7 +151,7 @@ export default function AdminProducts() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm('Delete this product?')) return;
+    if (!confirm(t('admin.deleteConfirm'))) return;
     await supabase.from('Products').delete().eq('Id', id);
     setProducts(prev => prev.filter(p => p.Id !== id));
   };
@@ -217,10 +217,10 @@ export default function AdminProducts() {
 
   const handleAddProduct = async () => {
     const newErrors = { name: '', price: '', category: '', brand: '' };
-    if (!newProduct.name) newErrors.name = 'Required';
-    if (!newProduct.price || newProduct.price <= 0) newErrors.price = 'Required';
-    if (!newProduct.categoryId) newErrors.category = 'Required';
-    if (!newProduct.brandId) newErrors.brand = 'Required';
+            if (!newProduct.name) newErrors.name = t('admin.required');
+    if (!newProduct.price || newProduct.price <= 0) newErrors.price = t('admin.required');
+    if (!newProduct.categoryId) newErrors.category = t('admin.required');
+    if (!newProduct.brandId) newErrors.brand = t('admin.required');
     setErrors(newErrors);
     if (Object.values(newErrors).some(Boolean)) return;
 
@@ -258,7 +258,7 @@ export default function AdminProducts() {
       {/* Add Product Toggle */}
       <div className="flex justify-end">
         <button onClick={() => setShowAddForm(!showAddForm)} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold">
-          {showAddForm ? '✕ Cancel' : `+ ${t('admin.addProduct')}`}
+          {showAddForm ? `✕ ${t('admin.cancel')}` : `+ ${t('admin.addProduct')}`}
         </button>
       </div>
 
@@ -297,10 +297,10 @@ export default function AdminProducts() {
               </select>
               {errors.brand && <p className="text-red-500 text-sm mt-1">{errors.brand}</p>}
             </div>
-            <input type="number" placeholder="Taxes (%)" value={newProduct.taxes}
+            <input type="number" placeholder={t('admin.taxes')} value={newProduct.taxes}
               onChange={(e) => setNewProduct({ ...newProduct, taxes: parseFloat(e.target.value) || 0 })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
-            <input type="number" step="0.01" placeholder="Weight (kg)" value={newProduct.weight}
+            <input type="number" step="0.01" placeholder={t('admin.weight')} value={newProduct.weight}
               onChange={(e) => setNewProduct({ ...newProduct, weight: parseFloat(e.target.value) || 0 })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
             <textarea placeholder={t('product.description')} value={newProduct.description}
@@ -351,7 +351,7 @@ export default function AdminProducts() {
               <th className="px-4 py-3 text-left font-semibold">{t('product.brand')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('product.price')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('admin.active')}</th>
-              <th className="px-4 py-3 text-center font-semibold">Actions</th>
+              <th className="px-4 py-3 text-center font-semibold">{t('admin.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -412,7 +412,7 @@ export default function AdminProducts() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-8 px-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-luxury text-gray-900 dark:text-white">Edit Product #{editingProduct.Id}</h2>
+              <h2 className="text-xl font-luxury text-gray-900 dark:text-white">{t('admin.editProduct')} #{editingProduct.Id}</h2>
               <button onClick={closeEdit} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><X size={24} /></button>
             </div>
 
@@ -420,7 +420,7 @@ export default function AdminProducts() {
               {/* Basic Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.price')} ({t('product.price')} base)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.price')} (base)</label>
                   <input type="number" value={editingProduct.Price}
                     onChange={(e) => handleUpdateProduct('Price', parseFloat(e.target.value))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
@@ -441,13 +441,13 @@ export default function AdminProducts() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Taxes (%)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('admin.taxes')}</label>
                   <input type="number" defaultValue={editingProduct.Taxes}
                     onBlur={(e) => handleUpdateProduct('Taxes', parseFloat(e.target.value) || 0)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Weight (kg)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('admin.weight')}</label>
                   <input type="number" step="0.01" defaultValue={editingProduct.Weigth}
                     onBlur={(e) => handleUpdateProduct('Weigth', parseFloat(e.target.value) || 0)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
@@ -467,10 +467,10 @@ export default function AdminProducts() {
               {/* Price Lists */}
               {priceLists.length > 0 && (
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Price Lists</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('admin.priceLists')}</h3>
                   <div className="flex flex-wrap gap-3 items-end">
                     <div className="flex-1 min-w-40">
-                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Price List</label>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('admin.priceList')}</label>
                       <select value={selectedPriceListId} onChange={(e) => handlePriceListChange(Number(e.target.value))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
                         {priceLists.map(pl => (
