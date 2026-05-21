@@ -26,6 +26,8 @@ interface OfferProduct {
   Description: string;
   Price: number;
   ImageUrl: string;
+  BrandId?: number;
+  BrandName?: string;
 }
 
 const HeroCarousel = () => {
@@ -53,7 +55,7 @@ const HeroCarousel = () => {
 
         const { data, error } = await supabase
           .from('Products')
-          .select('Id, Name, Description, Price, ImageUrl')
+          .select('Id, Name, Description, Price, ImageUrl, BrandId')
           .eq('IdBusiness', defaultSettings.id)
           .eq('Active', true)
           .eq('IsOffer', true)
@@ -63,6 +65,14 @@ const HeroCarousel = () => {
 
         const slidesWithMedia = data || [];
         const productIds = slidesWithMedia.map((product) => product.Id);
+
+        // Load brands
+        const brandIds = [...new Set(slidesWithMedia.map(p => p.BrandId).filter(Boolean))];
+        let brandMap: Record<number, string> = {};
+        if (brandIds.length > 0) {
+          const { data: brandsData } = await supabase.from('Brands').select('Id, DisplayName, Name').in('Id', brandIds);
+          (brandsData || []).forEach((b: any) => { brandMap[b.Id] = b.DisplayName || b.Name; });
+        }
         if (productIds.length > 0) {
           const { data: mediaData } = await supabase
             .from('ProductMedia')
@@ -85,12 +95,16 @@ const HeroCarousel = () => {
           setSlides(slidesWithMedia
             .map((slide) => ({
               ...slide,
-              ImageUrl: (mediaMap[slide.Id] || slide.ImageUrl || '').trim()
+              ImageUrl: (mediaMap[slide.Id] || slide.ImageUrl || '').trim(),
+              BrandName: brandMap[slide.BrandId] || ''
             }))
             .filter((slide) => slide.ImageUrl !== '')
           );
         } else {
-          setSlides(slidesWithMedia.filter((slide) => (slide.ImageUrl || '').trim() !== ''));
+          setSlides(slidesWithMedia
+            .filter((slide) => (slide.ImageUrl || '').trim() !== '')
+            .map(slide => ({ ...slide, BrandName: brandMap[slide.BrandId] || '' }))
+          );
         }
       } catch (error) {
         console.error('Error loading hero carousel offers:', error);
@@ -171,6 +185,12 @@ const HeroCarousel = () => {
                     Limited Offer
                   </span>
                 </div>
+
+                {slide.BrandName && (
+                  <span className="text-sm font-semibold tracking-widest text-gray-300 uppercase">
+                    {slide.BrandName}
+                  </span>
+                )}
 
                 <h1 className="text-5xl md:text-7xl font-luxury font-semibold leading-tight tracking-tight uppercase">
                   {slide.Name}
