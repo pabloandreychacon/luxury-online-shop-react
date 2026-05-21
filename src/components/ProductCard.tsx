@@ -5,6 +5,7 @@ import { ShoppingBag, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useState } from 'react';
+import { useProductPriceLists } from '../hooks/useProductPriceLists';
 
 interface ProductCardProps {
   product: Product;
@@ -17,9 +18,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [showAdded, setShowAdded] = useState(false);
   const inWishlist = isInWishlist(product.id);
+  const priceListOptions = useProductPriceLists(product.id);
+  const [selectedPriceListId, setSelectedPriceListId] = useState<number>(0);
+
+  const effectivePrice = priceListOptions.find(o => o.id === selectedPriceListId)?.price ?? product.price;
 
   const handleAddToCart = () => {
-    addItem(product, quantity);
+    addItem({ ...product, price: effectivePrice }, quantity);
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 2000);
   };
@@ -87,9 +92,23 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Price */}
         <div className="flex items-baseline gap-2 mb-4">
           <span className="text-2xl font-luxury text-luxury-gold">
-            ${product.price.toFixed(2)}
+            ${effectivePrice.toFixed(2)}
           </span>
         </div>
+
+        {/* Price List Selector */}
+        {priceListOptions.length > 0 && (
+          <select
+            value={selectedPriceListId}
+            onChange={(e) => setSelectedPriceListId(Number(e.target.value))}
+            className="w-full mb-3 px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-sm focus:outline-none focus:border-luxury-gold"
+          >
+            <option value={0}>{t('product.price')} (base)</option>
+            {priceListOptions.map(o => (
+              <option key={o.id} value={o.id}>{o.label} — ${o.price.toFixed(2)}</option>
+            ))}
+          </select>
+        )}
 
         {/* Add to Cart */}
         <div className="flex items-center gap-2">

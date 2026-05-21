@@ -23,6 +23,8 @@ interface Product {
 
 interface Category { Id: string; Name: string; DisplayName: string; CategoryId: number; }
 interface Brand { Id: string; Name: string; DisplayName: string; Active: boolean; IdBusiness: number; }
+interface PriceList { Id: number; Code: string; Label: string; Active: boolean; }
+interface ProductListPrice { Id: number; ProductId: number; PriceListId: number; Price: number; }
 interface ProductMediaItem {
   Id: number; ProductId: number; MediaType: 'image' | 'video';
   MediaUrl: string; DisplayOrder: number; BusinessEmail: string; IdBusiness: number; isVideo: boolean;
@@ -39,6 +41,10 @@ export default function AdminProducts() {
   const [newMediaInput, setNewMediaInput] = useState({ url: '', isVideo: false });
   const [productTranslations, setProductTranslations] = useState<Record<string, { Name: string; Description?: string }>>({});
   const [translationLang, setTranslationLang] = useState('en');
+  const [priceLists, setPriceLists] = useState<PriceList[]>([]);
+  const [productListPrices, setProductListPrices] = useState<ProductListPrice[]>([]);
+  const [selectedPriceListId, setSelectedPriceListId] = useState<number>(0);
+  const [priceListInputValue, setPriceListInputValue] = useState<string>('');
   const [langOptions, setLangOptions] = useState([
     { code: 'en', label: '🇺🇸 EN' },
     { code: 'es', label: '🇪🇸 ES' },
@@ -54,7 +60,7 @@ export default function AdminProducts() {
   const [filterBrand, setFilterBrand] = useState(0);
 
   useEffect(() => {
-    loadProducts(); loadCategories(); loadBrands(); loadLanguageOptions();
+    loadProducts(); loadCategories(); loadBrands(); loadLanguageOptions(); loadPriceLists();
   }, []);
 
   const loadProducts = async () => {
@@ -101,18 +107,32 @@ export default function AdminProducts() {
     if (languages.length > 0) setLangOptions(languages.map(l => ({ code: l.Code, label: l.Label?.trim() || l.Code.toUpperCase() })));
   };
 
+  const loadPriceLists = async () => {
+    const { data } = await supabase.from('PriceLists').select('*').eq('Active', true);
+    setPriceLists(data || []);
+    if (data && data.length > 0) setSelectedPriceListId(data[0].Id);
+  };
+
   const openEdit = async (product: Product) => {
     setEditingProduct(product);
     setTranslationLang('en');
 
-    const { data: media } = await supabase.from('ProductMedia').select('*')
-      .eq('ProductId', product.Id).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true });
-    setProductMedia(media || []);
+    const [{ data: media }, { data: translations }, { data: listPrices }] = await Promise.all([
+      supabase.from('ProductMedia').select('*').eq('ProductId', product.Id).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true }),
+      supabase.from('ProductTranslations').select('*').eq('ProductId', product.Id),
+      supabase.from('ProductListPrices').select('*').eq('ProductId', product.Id),
+    ]);
 
-    const { data: translations } = await supabase.from('ProductTranslations').select('*').eq('ProductId', product.Id);
+    setProductMedia(media || []);
     const map: Record<string, { Name: string; Description?: string }> = {};
     (translations || []).forEach((t: any) => { map[t.Language] = { Name: t.Name, Description: t.Description }; });
     setProductTranslations(map);
+    setProductListPrices(listPrices || []);
+
+    const firstPriceListId = priceLists[0]?.Id || 0;
+    setSelectedPriceListId(firstPriceListId);
+    const existing = (listPrices || []).find((lp: ProductListPrice) => lp.PriceListId === firstPriceListId);
+    setPriceListInputValue(existing ? String(existing.Price) : '');
     setNewMediaInput({ url: '', isVideo: false });
   };
 
@@ -156,6 +176,29 @@ export default function AdminProducts() {
   const toggleMediaVideo = async (mediaId: number, isVideo: boolean) => {
     await supabase.from('ProductMedia').update({ isVideo, MediaType: isVideo ? 'video' : 'image' }).eq('Id', mediaId);
     setProductMedia(prev => prev.map(m => m.Id === mediaId ? { ...m, isVideo, MediaType: isVideo ? 'video' : 'image' } : m));
+  };
+
+  const handlePriceListChange = (priceListId: number) => {
+    setSelectedPriceListId(priceListId);
+    const existing = productListPrices.find(lp => lp.PriceListId === priceListId);
+    setPriceListInputValue(existing ? String(existing.Price) : '');
+  };
+
+  const handleSavePriceListPrice = async () => {
+    if (!editingProduct || !selectedPriceListId) return;
+    const price = parseFloat(priceListInputValue);
+    if (isNaN(price) || price < 0) return;
+    await supabase.from('ProductListPrices').upsert([{
+      ProductId: Number(editingProduct.Id),
+      PriceListId: selectedPriceListId,
+      Price: price,
+    }], { onConflict: 'ProductId,PriceListId' });
+    setProductListPrices(prev => {
+      const exists = prev.find(lp => lp.PriceListId === selectedPriceListId);
+      if (exists) return prev.map(lp => lp.PriceListId === selectedPriceListId ? { ...lp, Price: price } : lp);
+      return [...prev, { Id: 0, ProductId: Number(editingProduct.Id), PriceListId: selectedPriceListId, Price: price }];
+    });
+    alert(t('admin.save') + ' ✓');
   };
 
   const handleSaveTranslation = async () => {
@@ -377,7 +420,7 @@ export default function AdminProducts() {
               {/* Basic Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.price')}</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.price')} ({t('product.price')} base)</label>
                   <input type="number" value={editingProduct.Price}
                     onChange={(e) => handleUpdateProduct('Price', parseFloat(e.target.value))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
@@ -420,6 +463,46 @@ export default function AdminProducts() {
                   </label>
                 </div>
               </div>
+
+              {/* Price Lists */}
+              {priceLists.length > 0 && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Price Lists</h3>
+                  <div className="flex flex-wrap gap-3 items-end">
+                    <div className="flex-1 min-w-40">
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Price List</label>
+                      <select value={selectedPriceListId} onChange={(e) => handlePriceListChange(Number(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
+                        {priceLists.map(pl => (
+                          <option key={pl.Id} value={pl.Id}>{pl.Label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1 min-w-32">
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.price')}</label>
+                      <input type="number" step="0.01" value={priceListInputValue}
+                        onChange={(e) => setPriceListInputValue(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold" />
+                    </div>
+                    <button onClick={handleSavePriceListPrice} className="bg-luxury-gold text-luxury-dark px-4 py-2 rounded-lg text-sm font-semibold hover:bg-opacity-90 transition whitespace-nowrap">
+                      {t('admin.save')}
+                    </button>
+                  </div>
+                  {productListPrices.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {productListPrices.map(lp => {
+                        const pl = priceLists.find(p => p.Id === lp.PriceListId);
+                        return pl ? (
+                          <span key={lp.PriceListId} className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs text-gray-700 dark:text-gray-300">
+                            {pl.Label}: ${lp.Price.toFixed(2)}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Media */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">

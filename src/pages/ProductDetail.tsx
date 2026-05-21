@@ -7,6 +7,7 @@ import { useWishlist } from '../context/WishlistContext';
 import type { Product } from '../lib/types';
 import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
+import { useProductPriceLists } from '../hooks/useProductPriceLists';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,12 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [mediaItems, setMediaItems] = useState<{ MediaUrl: string; isVideo: boolean }[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const priceListOptions = useProductPriceLists(id || '');
+  const [selectedPriceListId, setSelectedPriceListId] = useState<number>(0);
+
+  const effectivePrice = product
+    ? (priceListOptions.find(o => o.id === selectedPriceListId)?.price ?? product.price)
+    : 0;
 
   useEffect(() => {
     if (id) {
@@ -180,7 +187,7 @@ export default function ProductDetail() {
   }
 
   const handleAddToCart = () => {
-    addItem(product, quantity);
+    addItem({ ...product, price: effectivePrice }, quantity);
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 2000);
   };
@@ -333,9 +340,28 @@ export default function ProductDetail() {
             <div className="mb-8">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('product.price')}</p>
               <p className="text-4xl font-luxury text-luxury-gold">
-                ${product.price.toFixed(2)}
+                ${effectivePrice.toFixed(2)}
               </p>
             </div>
+
+            {/* Price List Selector */}
+            {priceListOptions.length > 0 && (
+              <div className="mb-8">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  Price List
+                </label>
+                <select
+                  value={selectedPriceListId}
+                  onChange={(e) => setSelectedPriceListId(Number(e.target.value))}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded focus:outline-none focus:border-luxury-gold"
+                >
+                  <option value={0}>{t('product.price')} (base) — ${product?.price.toFixed(2)}</option>
+                  {priceListOptions.map(o => (
+                    <option key={o.id} value={o.id}>{o.label} — ${o.price.toFixed(2)}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Stock Status removed - Active products are always available */}
 
