@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { defaultSettings, getBusinessLanguages } from '../data/settings';
 
@@ -21,30 +21,11 @@ interface Product {
   Weigth: number;
 }
 
-interface Category {
-  Id: string;
-  Name: string;
-  DisplayName: string;
-  CategoryId: number;
-}
-
-interface Brand {
-  Id: string;
-  Name: string;
-  DisplayName: string;
-  Active: boolean;
-  IdBusiness: number;
-}
-
+interface Category { Id: string; Name: string; DisplayName: string; CategoryId: number; }
+interface Brand { Id: string; Name: string; DisplayName: string; Active: boolean; IdBusiness: number; }
 interface ProductMediaItem {
-  Id: number;
-  ProductId: number;
-  MediaType: 'image' | 'video';
-  MediaUrl: string;
-  DisplayOrder: number;
-  BusinessEmail: string;
-  IdBusiness: number;
-  isVideo: boolean;
+  Id: number; ProductId: number; MediaType: 'image' | 'video';
+  MediaUrl: string; DisplayOrder: number; BusinessEmail: string; IdBusiness: number; isVideo: boolean;
 }
 
 export default function AdminProducts() {
@@ -52,694 +33,441 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    price: 0,
-    categoryId: 0,
-    brandId: 0,
-    description: '',
-    stockQuantity: 0,
-    taxes: 0,
-    weight: 0,
-    isOffer: false,
-  });
-
-  const [errors, setErrors] = useState({ name: '', price: '', category: '', brand: '' });
-  const [productMedia, setProductMedia] = useState<Record<string, ProductMediaItem[]>>({});
-  const [newMediaInputs, setNewMediaInputs] = useState<Record<string, { url: string; isVideo: boolean }>>({});
-  const [productTranslations, setProductTranslations] = useState<Record<string, Record<string, { Name: string; Description?: string }>>>({});
-  const [translationLangs, setTranslationLangs] = useState<Record<string, string>>({});
+  const [productFirstMedia, setProductFirstMedia] = useState<Record<string, { url: string; isVideo: boolean }>>({});
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productMedia, setProductMedia] = useState<ProductMediaItem[]>([]);
+  const [newMediaInput, setNewMediaInput] = useState({ url: '', isVideo: false });
+  const [productTranslations, setProductTranslations] = useState<Record<string, { Name: string; Description?: string }>>({});
+  const [translationLang, setTranslationLang] = useState('en');
   const [langOptions, setLangOptions] = useState([
     { code: 'en', label: '🇺🇸 EN' },
     { code: 'es', label: '🇪🇸 ES' },
     { code: 'zh', label: '🇨🇳 中文' },
   ]);
+  const [newProduct, setNewProduct] = useState({
+    name: '', price: 0, categoryId: 0, brandId: 0,
+    description: '', stockQuantity: 0, taxes: 0, weight: 0, isOffer: false,
+  });
+  const [errors, setErrors] = useState({ name: '', price: '', category: '', brand: '' });
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [filterCategory, setFilterCategory] = useState(0);
+  const [filterBrand, setFilterBrand] = useState(0);
 
   useEffect(() => {
-    loadProducts();
-    loadCategories();
-    loadBrands();
-    loadLanguageOptions();
+    loadProducts(); loadCategories(); loadBrands(); loadLanguageOptions();
   }, []);
 
   const loadProducts = async () => {
-    const { data } = await supabase
-      .from('Products')
-      .select('*')
-      .eq('IdBusiness', defaultSettings.id);
+    const { data } = await supabase.from('Products').select('*').eq('IdBusiness', defaultSettings.id);
     setProducts(data || []);
 
     if (data && data.length > 0) {
-      const productIds = data.map((product) => Number(product.Id));
-      await loadProductMedia(productIds);
-      await loadProductTranslations(productIds);
+      const ids = data.map(p => Number(p.Id));
+      const { data: media } = await supabase.from('ProductMedia').select('ProductId, MediaUrl, isVideo, DisplayOrder')
+        .in('ProductId', ids).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true });
+      const map: Record<string, { url: string; isVideo: boolean }> = {};
+      (media || []).forEach((m: any) => {
+        const key = String(m.ProductId);
+        if (!map[key]) map[key] = { url: m.MediaUrl, isVideo: !!m.isVideo };
+      });
+      setProductFirstMedia(map);
     }
   };
-
-  const loadLanguageOptions = async () => {
-    const languages = await getBusinessLanguages();
-    if (languages.length > 0) {
-      setLangOptions(
-        languages.map((lang) => ({
-          code: lang.Code,
-          label: lang.Label?.trim() || lang.Code.toUpperCase(),
-        }))
-      );
-    }
-  };
-
-  const loadProductTranslations = async (productIds: number[]) => {
-    if (productIds.length === 0) {
-      setProductTranslations({});
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('ProductTranslations')
-      .select('*')
-      .in('ProductId', productIds);
-
-    if (error) {
-      console.error('Error loading product translations:', error);
-      setProductTranslations({});
-      return;
-    }
-
-    const grouped: Record<string, Record<string, { Name: string; Description?: string }>> = {};
-    (data || []).forEach((t) => {
-      const pid = String(t.ProductId);
-      if (!grouped[pid]) grouped[pid] = {};
-      grouped[pid][t.Language] = { Name: t.Name, Description: t.Description };
-    });
-
-    setProductTranslations(grouped);
-
-    // initialize selected language per product (prefer 'en')
-    const langs: Record<string, string> = {};
-    productIds.forEach((id) => {
-      const key = String(id);
-      langs[key] = grouped[key]?.['en'] ? 'en' : Object.keys(grouped[key] || {})[0] || 'en';
-    });
-    setTranslationLangs(langs);
-  };
-
-  const loadProductMedia = async (productIds: number[]) => {
-    if (productIds.length === 0) {
-      setProductMedia({});
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('ProductMedia')
-      .select('*')
-      .in('ProductId', productIds)
-      .eq('IdBusiness', defaultSettings.id)
-      .order('DisplayOrder', { ascending: true });
-
-    if (error) {
-      console.error('Error loading product media:', error);
-      setProductMedia({});
-      return;
-    }
-
-    const grouped: Record<string, ProductMediaItem[]> = {};
-    (data || []).forEach((media) => {
-      const productId = String(media.ProductId);
-      if (!grouped[productId]) grouped[productId] = [];
-      grouped[productId].push(media as ProductMediaItem);
-    });
-
-    setProductMedia(grouped);
-  };
-
-  const deleteProductMedia = async (productId: string | number, mediaId: number) => {
-    const { error } = await supabase.from('ProductMedia').delete().eq('Id', mediaId);
-    if (error) {
-      alert('Error deleting media');
-      return;
-    }
-
-    setProductMedia((prev) => {
-      const key = String(productId);
-      const updated = (prev[key]?.filter((item) => item.Id !== mediaId) || []) as ProductMediaItem[];
-      return { ...prev, [key]: updated };
-    });
-  };
-
-  const toggleMediaVideo = async (mediaId: number, productId: string | number, isVideo: boolean) => {
-    const { error } = await supabase.from('ProductMedia').update({ isVideo, MediaType: isVideo ? 'video' : 'image' }).eq('Id', mediaId);
-    if (error) {
-      alert('Error updating media type');
-      return;
-    }
-
-    setProductMedia((prev) => {
-      const key = String(productId);
-      const updated = (prev[key]?.map((item) => item.Id === mediaId ? { ...item, isVideo, MediaType: isVideo ? 'video' : 'image' } : item) || []) as ProductMediaItem[];
-      return { ...prev, [key]: updated };
-    });
-  };
-
-  const handleAddMediaItem = async (productId: string) => {
-    const input = newMediaInputs[productId] || { url: '', isVideo: false };
-    if (!input.url) return;
-
-    const { error } = await supabase.from('ProductMedia').insert([{
-      ProductId: Number(productId),
-      MediaType: input.isVideo ? 'video' : 'image',
-      MediaUrl: input.url,
-      DisplayOrder: 0,
-      BusinessEmail: defaultSettings.email,
-      IdBusiness: defaultSettings.id,
-      isVideo: input.isVideo
-    }]);
-
-    if (error) {
-      alert('Error adding media item');
-      return;
-    }
-
-    setNewMediaInputs((prev) => ({ ...prev, [productId]: { url: '', isVideo: false } }));
-    await loadProductMedia([Number(productId)]);
-  };
-
-  const handleSaveTranslation = async (productId: string) => {
-    const lang = translationLangs[productId] || 'en';
-    const current = productTranslations[productId]?.[lang] || { Name: '', Description: '' };
-
-    // optimistic update already applied to state via inputs
-    const payload = {
-      ProductId: Number(productId),
-      Language: lang,
-      Name: current.Name,
-      Description: current.Description || null,
-    };
-
-    const { error } = await supabase.from('ProductTranslations').upsert([payload], { onConflict: 'ProductId,Language' });
-    if (error) {
-      alert('Error saving translation');
-      await loadProductTranslations([Number(productId)]);
-    } else {
-      alert('Translation saved');
-    }
-  };
-
 
   const loadCategories = async () => {
-    const { data, error } = await supabase
-      .from('Categories')
-      .select('*')
-      .eq('IdBusiness', defaultSettings.id)
-      .eq('Active', true);
-
-    if (error) {
-      console.error('Error loading categories:', error);
-    }
+    const { data } = await supabase.from('Categories').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true);
     setCategories(data || []);
   };
 
   const loadBrands = async () => {
-    const { data, error } = await supabase
-      .from('Brands')
-      .select('*')
-      .eq('IdBusiness', defaultSettings.id)
-      .eq('Active', true);
-
-    if (error) {
-      console.error('Error loading brands:', error);
-    }
+    const { data } = await supabase.from('Brands').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true);
     setBrands(data || []);
+  };
+
+  const loadLanguageOptions = async () => {
+    const languages = await getBusinessLanguages();
+    if (languages.length > 0) setLangOptions(languages.map(l => ({ code: l.Code, label: l.Label?.trim() || l.Code.toUpperCase() })));
+  };
+
+  const openEdit = async (product: Product) => {
+    setEditingProduct(product);
+    setTranslationLang('en');
+
+    const { data: media } = await supabase.from('ProductMedia').select('*')
+      .eq('ProductId', product.Id).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true });
+    setProductMedia(media || []);
+
+    const { data: translations } = await supabase.from('ProductTranslations').select('*').eq('ProductId', product.Id);
+    const map: Record<string, { Name: string; Description?: string }> = {};
+    (translations || []).forEach((t: any) => { map[t.Language] = { Name: t.Name, Description: t.Description }; });
+    setProductTranslations(map);
+    setNewMediaInput({ url: '', isVideo: false });
+  };
+
+  const closeEdit = () => {
+    setEditingProduct(null);
+    setProductMedia([]);
+    setProductTranslations({});
+    loadProducts();
+  };
+
+  const handleUpdateProduct = async (field: string, value: any) => {
+    if (!editingProduct) return;
+    setEditingProduct(prev => prev ? { ...prev, [field]: value } : prev);
+    await supabase.from('Products').update({ [field]: value }).eq('Id', editingProduct.Id);
+    setProducts(prev => prev.map(p => p.Id === editingProduct.Id ? { ...p, [field]: value } : p));
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm('Delete this product?')) return;
+    await supabase.from('Products').delete().eq('Id', id);
+    setProducts(prev => prev.filter(p => p.Id !== id));
+  };
+
+  const handleAddMediaItem = async () => {
+    if (!editingProduct || !newMediaInput.url) return;
+    await supabase.from('ProductMedia').insert([{
+      ProductId: Number(editingProduct.Id), MediaType: newMediaInput.isVideo ? 'video' : 'image',
+      MediaUrl: newMediaInput.url, DisplayOrder: 0, BusinessEmail: defaultSettings.email,
+      IdBusiness: defaultSettings.id, isVideo: newMediaInput.isVideo
+    }]);
+    setNewMediaInput({ url: '', isVideo: false });
+    const { data } = await supabase.from('ProductMedia').select('*').eq('ProductId', editingProduct.Id).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true });
+    setProductMedia(data || []);
+  };
+
+  const deleteProductMedia = async (mediaId: number) => {
+    await supabase.from('ProductMedia').delete().eq('Id', mediaId);
+    setProductMedia(prev => prev.filter(m => m.Id !== mediaId));
+  };
+
+  const toggleMediaVideo = async (mediaId: number, isVideo: boolean) => {
+    await supabase.from('ProductMedia').update({ isVideo, MediaType: isVideo ? 'video' : 'image' }).eq('Id', mediaId);
+    setProductMedia(prev => prev.map(m => m.Id === mediaId ? { ...m, isVideo, MediaType: isVideo ? 'video' : 'image' } : m));
+  };
+
+  const handleSaveTranslation = async () => {
+    if (!editingProduct) return;
+    const current = productTranslations[translationLang] || { Name: '', Description: '' };
+    await supabase.from('ProductTranslations').upsert([{
+      ProductId: Number(editingProduct.Id), Language: translationLang,
+      Name: current.Name, Description: current.Description || null,
+    }], { onConflict: 'ProductId,Language' });
+    alert(t('admin.save') + ' ✓');
   };
 
   const handleAddProduct = async () => {
     const newErrors = { name: '', price: '', category: '', brand: '' };
-
-    if (!newProduct.name) {
-      newErrors.name = 'Please enter a product name';
-    }
-    if (!newProduct.price || newProduct.price <= 0) {
-      newErrors.price = 'Please enter a valid price';
-    }
-    if (!newProduct.categoryId || newProduct.categoryId === 0) {
-      newErrors.category = 'Please select a category';
-    }
-    if (!newProduct.brandId || newProduct.brandId === 0) {
-      newErrors.brand = 'Please select a brand';
-    }
-
+    if (!newProduct.name) newErrors.name = 'Required';
+    if (!newProduct.price || newProduct.price <= 0) newErrors.price = 'Required';
+    if (!newProduct.categoryId) newErrors.category = 'Required';
+    if (!newProduct.brandId) newErrors.brand = 'Required';
     setErrors(newErrors);
+    if (Object.values(newErrors).some(Boolean)) return;
 
-    if (newErrors.name || newErrors.price || newErrors.category || newErrors.brand) {
-      return;
-    }
-
-    const { data: inserted, error } = await supabase.from('Products').insert([{
-      CategoryId: newProduct.categoryId,
-      Price: newProduct.price,
-      ProductId: 0,
-      StockQuantity: newProduct.stockQuantity || 0,
-      BusinessEmail: defaultSettings.email,
-      BrandId: newProduct.brandId,
-      Taxes: newProduct.taxes || 0,
-      Active: true,
-      IsService: false,
-      IsOffer: newProduct.isOffer || false,
-      IdBusiness: defaultSettings.id,
-      Weigth: newProduct.weight || 0
+    const { data: inserted } = await supabase.from('Products').insert([{
+      CategoryId: newProduct.categoryId, Price: newProduct.price, ProductId: 0,
+      StockQuantity: newProduct.stockQuantity, BusinessEmail: defaultSettings.email,
+      BrandId: newProduct.brandId, Taxes: newProduct.taxes, Active: true,
+      IsService: false, IsOffer: newProduct.isOffer, IdBusiness: defaultSettings.id, Weigth: newProduct.weight
     }]).select('Id').maybeSingle();
 
-    if (error) {
-      alert(`Error adding product: ${error?.message || JSON.stringify(error)}`);
-      return;
-    }
-
-    // create initial translation (default to 'en')
     if (inserted?.Id) {
-      const { error: trErr } = await supabase.from('ProductTranslations').insert([{
-        ProductId: inserted.Id,
-        Language: 'en',
-        Name: newProduct.name,
-        Description: newProduct.description || ''
+      await supabase.from('ProductTranslations').insert([{
+        ProductId: inserted.Id, Language: 'en', Name: newProduct.name, Description: newProduct.description || ''
       }]);
-      if (trErr) {
-        console.error('Error inserting translation:', trErr);
-      }
     }
 
     setNewProduct({ name: '', price: 0, categoryId: 0, brandId: 0, description: '', stockQuantity: 0, taxes: 0, weight: 0, isOffer: false });
     setErrors({ name: '', price: '', category: '', brand: '' });
+    setShowAddForm(false);
     await loadProducts();
-    alert('Product added successfully!');
   };
 
-  const handleUpdateProduct = async (id: string, field: string, value: any) => {
-    setProducts((prev) => prev.map((product) => (
-      product.Id === id ? { ...product, [field]: value } : product
-    )));
+  const getCategoryName = (id: number) => categories.find(c => Number(c.Id) === id)?.DisplayName || '-';
+  const getBrandName = (id?: number) => brands.find(b => Number(b.Id) === id)?.DisplayName || brands.find(b => Number(b.Id) === id)?.Name || '-';
 
-    const { error } = await supabase.from('Products').update({ [field]: value }).eq('Id', id);
-    if (error) {
-      alert('Error updating product');
-      loadProducts();
-    }
-  };
-
-  const handleDeleteProduct = async (id: string) => {
-    setProducts((prev) => prev.filter((product) => product.Id !== id));
-    setProductMedia((prev) => {
-      const copy = { ...prev };
-      delete copy[id];
-      return copy;
-    });
-
-    const { error } = await supabase.from('Products').delete().eq('Id', id);
-    if (error) {
-      alert('Error deleting product');
-      loadProducts();
-    }
-  };
+  const filteredProducts = products.filter(p => {
+    if (filterCategory && p.CategoryId !== filterCategory) return false;
+    if (filterBrand && p.BrandId !== filterBrand) return false;
+    return true;
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-4">
-        <h2 className="text-xl font-luxury text-gray-900 dark:text-white">
-          {t('admin.addProduct')}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <input
-              type="text"
-              placeholder={t('common.name')}
-              value={newProduct.name}
-              onChange={(e) => {
-                setNewProduct({ ...newProduct, name: e.target.value });
-                setErrors({ ...errors, name: '' });
-              }}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } dark:bg-gray-700 dark:text-white`}
-            />
-            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('product.price')}
-            </label>
-            <input
-              type="number"
-              placeholder="0.00"
-              value={newProduct.price}
-              onChange={(e) => {
-                setNewProduct({ ...newProduct, price: parseFloat(e.target.value) || 0 });
-                setErrors({ ...errors, price: '' });
-              }}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } dark:bg-gray-700 dark:text-white`}
-            />
-            {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('product.category')}
-            </label>
-            <select
-              value={newProduct.categoryId}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                setNewProduct({ ...newProduct, categoryId: value });
-                setErrors({ ...errors, category: '' });
-              }}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } dark:bg-gray-700 dark:text-white`}
-            >
-              <option value="0">-- {t('product.category')} --</option>
-              {categories.map((cat) => (
-                <option key={cat.Id} value={cat.Id}>{cat.DisplayName}</option>
-              ))}
-            </select>
-            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('product.brand')}
-            </label>
-            <select
-              value={newProduct.brandId}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                setNewProduct({ ...newProduct, brandId: value });
-                setErrors({ ...errors, brand: '' });
-              }}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.brand ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } dark:bg-gray-700 dark:text-white`}
-            >
-              <option value="0">-- {t('product.brand')} --</option>
-              {brands.map((brand) => (
-                <option key={brand.Id} value={brand.Id}>{brand.DisplayName || brand.Name}</option>
-              ))}
-            </select>
-            {errors.brand && <p className="text-red-500 text-sm mt-1">{errors.brand}</p>}
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <input
-              type="checkbox"
-              checked={newProduct.isOffer}
-              onChange={(e) => setNewProduct({ ...newProduct, isOffer: e.target.checked })}
-              className="w-4 h-4 rounded"
-            />
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('admin.isOffer')}
-            </label>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Taxes (%)
-            </label>
-            <input
-              type="number"
-              placeholder="0"
-              value={newProduct.taxes}
-              onChange={(e) => setNewProduct({ ...newProduct, taxes: parseFloat(e.target.value) || 0 })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Weight (kg)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={newProduct.weight}
-              onChange={(e) => setNewProduct({ ...newProduct, weight: parseFloat(e.target.value) || 0 })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-            />
-          </div>
-          <textarea
-            placeholder={t('product.description')}
-            value={newProduct.description}
-            onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-            rows={2}
-          />
-        </div>
-        <button
-          onClick={handleAddProduct}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-        >
-          {t('admin.add')}
+    <div className="space-y-4">
+      {/* Add Product Toggle */}
+      <div className="flex justify-end">
+        <button onClick={() => setShowAddForm(!showAddForm)} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold">
+          {showAddForm ? '✕ Cancel' : `+ ${t('admin.addProduct')}`}
         </button>
       </div>
 
-      {products.map((product) => (
-        <div key={product.Id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-          <div className="flex justify-between items-start">
-            <div className="flex-1 space-y-4">
+      {/* Add Form */}
+      {showAddForm && (
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-4">
+          <h2 className="text-xl font-luxury text-gray-900 dark:text-white">{t('admin.addProduct')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <input type="text" placeholder={t('common.name')} value={newProduct.name}
+                onChange={(e) => { setNewProduct({ ...newProduct, name: e.target.value }); setErrors({ ...errors, name: '' }); }}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`} />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            </div>
+            <div>
+              <input type="number" placeholder={t('product.price')} value={newProduct.price}
+                onChange={(e) => { setNewProduct({ ...newProduct, price: parseFloat(e.target.value) || 0 }); setErrors({ ...errors, price: '' }); }}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`} />
+              {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+            </div>
+            <div>
+              <select value={newProduct.categoryId}
+                onChange={(e) => { setNewProduct({ ...newProduct, categoryId: parseInt(e.target.value) }); setErrors({ ...errors, category: '' }); }}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`}>
+                <option value="0">-- {t('product.category')} --</option>
+                {categories.map(c => <option key={c.Id} value={c.Id}>{c.DisplayName}</option>)}
+              </select>
+              {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+            </div>
+            <div>
+              <select value={newProduct.brandId}
+                onChange={(e) => { setNewProduct({ ...newProduct, brandId: parseInt(e.target.value) }); setErrors({ ...errors, brand: '' }); }}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.brand ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`}>
+                <option value="0">-- {t('product.brand')} --</option>
+                {brands.map(b => <option key={b.Id} value={b.Id}>{b.DisplayName || b.Name}</option>)}
+              </select>
+              {errors.brand && <p className="text-red-500 text-sm mt-1">{errors.brand}</p>}
+            </div>
+            <input type="number" placeholder="Taxes (%)" value={newProduct.taxes}
+              onChange={(e) => setNewProduct({ ...newProduct, taxes: parseFloat(e.target.value) || 0 })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+            <input type="number" step="0.01" placeholder="Weight (kg)" value={newProduct.weight}
+              onChange={(e) => setNewProduct({ ...newProduct, weight: parseFloat(e.target.value) || 0 })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+            <textarea placeholder={t('product.description')} value={newProduct.description}
+              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold md:col-span-2" rows={2} />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              <input type="checkbox" checked={newProduct.isOffer} onChange={(e) => setNewProduct({ ...newProduct, isOffer: e.target.checked })} className="w-4 h-4 rounded" />
+              {t('admin.isOffer')}
+            </label>
+          </div>
+          <button onClick={handleAddProduct} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            {t('admin.add')}
+          </button>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+        <div className="flex-1 min-w-40">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('shop.category')}</label>
+          <select value={filterCategory} onChange={(e) => setFilterCategory(parseInt(e.target.value))}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
+            <option value={0}>{t('shop.allProducts')}</option>
+            {categories.map(c => <option key={c.Id} value={c.Id}>{c.DisplayName}</option>)}
+          </select>
+        </div>
+        <div className="flex-1 min-w-40">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.brand')}</label>
+          <select value={filterBrand} onChange={(e) => setFilterBrand(parseInt(e.target.value))}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
+            <option value={0}>{t('shop.allBrands')}</option>
+            {brands.map(b => <option key={b.Id} value={b.Id}>{b.DisplayName || b.Name}</option>)}
+          </select>
+        </div>
+        <div className="flex items-end">
+          <span className="text-sm text-gray-500 dark:text-gray-400 pb-2">{filteredProducts.length} / {products.length}</span>
+        </div>
+      </div>
+
+      {/* Products Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hidden md:table-header-group">
+            <tr>
+              <th className="px-4 py-3 text-left font-semibold w-16"></th>
+              <th className="px-4 py-3 text-left font-semibold">{t('common.name')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('product.category')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('product.brand')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('product.price')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('admin.active')}</th>
+              <th className="px-4 py-3 text-center font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {filteredProducts.map(product => (
+              <tr key={product.Id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition flex flex-col md:table-row border-b border-gray-200 dark:border-gray-700 md:border-0">
+                <td className="px-4 py-2 md:py-3 md:table-cell">
+                  {productFirstMedia[product.Id] ? (
+                    productFirstMedia[product.Id].isVideo
+                      ? <video src={productFirstMedia[product.Id].url} className="w-12 h-12 object-cover rounded" muted />
+                      : <img src={productFirstMedia[product.Id].url} alt="" className="w-12 h-12 object-cover rounded" />
+                  ) : (
+                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-400 text-xs">—</div>
+                  )}
+                </td>
+                <td className="px-4 py-2 md:py-3 text-gray-900 dark:text-white font-medium flex justify-between md:table-cell">
+                  <span className="text-xs text-gray-500 md:hidden">{t('common.name')}</span>
+                  {product.Name || '—'}
+                </td>
+                <td className="px-4 py-2 md:py-3 text-gray-600 dark:text-gray-400 flex justify-between md:table-cell">
+                  <span className="text-xs text-gray-500 md:hidden">{t('product.category')}</span>
+                  {getCategoryName(product.CategoryId)}
+                </td>
+                <td className="px-4 py-2 md:py-3 text-gray-600 dark:text-gray-400 flex justify-between md:table-cell">
+                  <span className="text-xs text-gray-500 md:hidden">{t('product.brand')}</span>
+                  {getBrandName(product.BrandId)}
+                </td>
+                <td className="px-4 py-2 md:py-3 text-gray-600 dark:text-gray-400 flex justify-between md:table-cell">
+                  <span className="text-xs text-gray-500 md:hidden">{t('product.price')}</span>
+                  ${product.Price?.toFixed(2)}
+                </td>
+                <td className="px-4 py-2 md:py-3 flex justify-between md:table-cell">
+                  <span className="text-xs text-gray-500 md:hidden">{t('admin.active')}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${product.Active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                    {product.Active ? '✓' : '✗'}
+                  </span>
+                </td>
+                <td className="px-4 py-2 md:py-3 md:text-center">
+                  <div className="flex items-center gap-2 md:justify-center">
+                    <button onClick={() => openEdit(product)} className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded transition">
+                      <Pencil size={16} />
+                    </button>
+                    <button onClick={() => handleDeleteProduct(product.Id)} className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded transition">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {products.length === 0 && (
+          <p className="text-center text-gray-500 dark:text-gray-400 py-8">{t('common.noResults')}</p>
+        )}
+      </div>
+
+      {/* Edit Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-8 px-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-luxury text-gray-900 dark:text-white">Edit Product #{editingProduct.Id}</h2>
+              <button onClick={closeEdit} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><X size={24} /></button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Basic Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('product.price')}
-                  </label>
-                  <input
-                    type="number"
-                    value={product.Price}
-                    onChange={(e) => handleUpdateProduct(product.Id, 'Price', parseFloat(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.price')}</label>
+                  <input type="number" value={editingProduct.Price}
+                    onChange={(e) => handleUpdateProduct('Price', parseFloat(e.target.value))}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('product.category')}
-                  </label>
-                  <select
-                    value={product.CategoryId}
-                    onChange={(e) => handleUpdateProduct(product.Id, 'CategoryId', parseInt(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat.Id} value={cat.Id}>{cat.DisplayName}</option>
-                    ))}
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.category')}</label>
+                  <select value={editingProduct.CategoryId} onChange={(e) => handleUpdateProduct('CategoryId', parseInt(e.target.value))}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold">
+                    {categories.map(c => <option key={c.Id} value={c.Id}>{c.DisplayName}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('product.brand')}
-                  </label>
-                  <select
-                    value={(product as any).BrandId || 0}
-                    onChange={(e) => handleUpdateProduct(product.Id, 'BrandId', parseInt(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                  >
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.brand')}</label>
+                  <select value={editingProduct.BrandId || 0} onChange={(e) => handleUpdateProduct('BrandId', parseInt(e.target.value))}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold">
                     <option value="0">-- {t('product.brand')} --</option>
-                    {brands.map((brand) => (
-                      <option key={brand.Id} value={brand.Id}>{brand.DisplayName || brand.Name}</option>
-                    ))}
+                    {brands.map(b => <option key={b.Id} value={b.Id}>{b.DisplayName || b.Name}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Taxes (%)
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue={product.Taxes}
-                    onBlur={(e) => handleUpdateProduct(product.Id, 'Taxes', parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Taxes (%)</label>
+                  <input type="number" defaultValue={editingProduct.Taxes}
+                    onBlur={(e) => handleUpdateProduct('Taxes', parseFloat(e.target.value) || 0)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Weight (kg)
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Weight (kg)</label>
+                  <input type="number" step="0.01" defaultValue={editingProduct.Weigth}
+                    onBlur={(e) => handleUpdateProduct('Weigth', parseFloat(e.target.value) || 0)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+                </div>
+                <div className="flex items-center gap-4 mt-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" checked={editingProduct.Active} onChange={(e) => handleUpdateProduct('Active', e.target.checked)} className="w-4 h-4 rounded" />
+                    {t('admin.active')}
                   </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    defaultValue={product.Weigth}
-                    onBlur={(e) => handleUpdateProduct(product.Id, 'Weigth', parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                  />
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" checked={editingProduct.IsOffer} onChange={(e) => handleUpdateProduct('IsOffer', e.target.checked)} className="w-4 h-4 rounded" />
+                    {t('admin.isOffer')}
+                  </label>
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-300 dark:border-gray-700">
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    {t('admin.productMedia') || 'Product Media'}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t('admin.mediaUrl')}
-                      </label>
-                      <input
-                        type="text"
-                        value={newMediaInputs[product.Id]?.url || ''}
-                        onChange={(e) => setNewMediaInputs((prev) => ({
-                          ...prev,
-                          [product.Id]: {
-                            url: e.target.value,
-                            isVideo: prev[product.Id]?.isVideo || false,
-                          },
-                        }))}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                        placeholder={t('admin.mediaUrlPlaceholder') || 'https://media.example.com/file.jpg'}
-                      />
-                    </div>
-                    <div className="flex items-end gap-3">
-                      <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <input
-                          type="checkbox"
-                          checked={newMediaInputs[product.Id]?.isVideo || false}
-                          onChange={(e) => setNewMediaInputs((prev) => ({
-                            ...prev,
-                            [product.Id]: {
-                              url: prev[product.Id]?.url || '',
-                              isVideo: e.target.checked,
-                            },
-                          }))}
-                          className="w-4 h-4 rounded"
-                        />
-                        {t('admin.isVideo')}
-                      </label>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <button
-                      onClick={() => handleAddMediaItem(product.Id)}
-                      className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
-                    >
-                      {t('admin.addMedia')}
-                    </button>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {t('admin.mediaUrlHint') || 'Use a valid image or video URL for ProductMedia.'}
-                    </p>
-                  </div>
+              {/* Media */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('admin.productMedia')}</h3>
+                <div className="flex gap-3 mb-3">
+                  <input type="text" value={newMediaInput.url} onChange={(e) => setNewMediaInput(p => ({ ...p, url: e.target.value }))}
+                    placeholder={t('admin.mediaUrlPlaceholder')}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold text-sm" />
+                  <label className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    <input type="checkbox" checked={newMediaInput.isVideo} onChange={(e) => setNewMediaInput(p => ({ ...p, isVideo: e.target.checked }))} className="w-4 h-4" />
+                    {t('admin.isVideo')}
+                  </label>
+                  <button onClick={handleAddMediaItem} className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 text-sm whitespace-nowrap">{t('admin.addMedia')}</button>
                 </div>
-
-                {productMedia[product.Id] && productMedia[product.Id].length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      {t('admin.uploadedMedia') || 'Uploaded Media'} ({productMedia[product.Id].length})
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {productMedia[product.Id].map((media) => (
-                        <div key={media.Id} className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg">
-                          {media.isVideo ? (
-                            <video controls src={media.MediaUrl} className="w-full h-48 object-cover rounded" />
-                          ) : (
-                            <img src={media.MediaUrl} alt={`Media ${media.Id}`} className="w-full h-48 object-cover rounded" />
-                          )}
-                          <div className="mt-3 flex flex-col gap-2">
-                            <button
-                              onClick={() => toggleMediaVideo(media.Id, product.Id, !media.isVideo)}
-                              className="w-full bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                            >
-                              {media.isVideo ? t('admin.markAsImage') : t('admin.markAsVideo')}
-                            </button>
-                            <button
-                              onClick={() => deleteProductMedia(product.Id, media.Id)}
-                              className="w-full bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center justify-center gap-2"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              {t('admin.deleteMedia') || 'Delete'}
-                            </button>
-                          </div>
+                {productMedia.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {productMedia.map(media => (
+                      <div key={media.Id} className="bg-gray-100 dark:bg-gray-900 p-2 rounded-lg">
+                        {media.isVideo
+                          ? <video controls src={media.MediaUrl} className="w-full h-32 object-cover rounded" />
+                          : <img src={media.MediaUrl} alt="" className="w-full h-32 object-cover rounded" />}
+                        <div className="mt-2 flex gap-1">
+                          <button onClick={() => toggleMediaVideo(media.Id, !media.isVideo)} className="flex-1 bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">
+                            {media.isVideo ? t('admin.markAsImage') : t('admin.markAsVideo')}
+                          </button>
+                          <button onClick={() => deleteProductMedia(media.Id)} className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">
+                            <Trash2 size={12} />
+                          </button>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-300 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  {t('admin.translations') || 'Translations'}
-                </h3>
+              {/* Translations */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('admin.translations')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('common.language')}</label>
-                    <select
-                      value={translationLangs[product.Id] || 'en'}
-                      onChange={(e) => setTranslationLangs((prev) => ({ ...prev, [product.Id]: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                    >
-                      {langOptions.map((l) => (
-                        <option key={l.code} value={l.code}>{l.label}</option>
-                      ))}
+                    <select value={translationLang} onChange={(e) => setTranslationLang(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold">
+                      {langOptions.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('admin.translationName') || t('common.name')}</label>
-                    <input
-                      type="text"
-                      value={productTranslations[product.Id]?.[translationLangs[product.Id] || 'en']?.Name || ''}
-                      onChange={(e) => setProductTranslations((prev) => {
-                        const key = product.Id;
-                        const lang = translationLangs[key] || 'en';
-                        const copy = { ...prev };
-                        copy[key] = copy[key] || {};
-                        copy[key][lang] = { ...(copy[key][lang] || {}), Name: e.target.value };
-                        return copy;
-                      })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                    />
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 mt-3">{t('admin.translationDescription') || t('product.description')}</label>
-                    <textarea
-                      value={productTranslations[product.Id]?.[translationLangs[product.Id] || 'en']?.Description || ''}
-                      onChange={(e) => setProductTranslations((prev) => {
-                        const key = product.Id;
-                        const lang = translationLangs[key] || 'en';
-                        const copy = { ...prev };
-                        copy[key] = copy[key] || {};
-                        copy[key][lang] = { ...(copy[key][lang] || {}), Description: e.target.value };
-                        return copy;
-                      })}
-                      rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-                    />
-                    <div className="mt-3 flex gap-2">
-                      <button
-                        onClick={() => handleSaveTranslation(product.Id)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                      >
-                        {t('admin.saveTranslation') || 'Save Translation'}
-                      </button>
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('admin.translationName')}</label>
+                    <input type="text" value={productTranslations[translationLang]?.Name || ''}
+                      onChange={(e) => setProductTranslations(prev => ({ ...prev, [translationLang]: { ...prev[translationLang], Name: e.target.value } }))}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 mt-3">{t('admin.translationDescription')}</label>
+                    <textarea value={productTranslations[translationLang]?.Description || ''}
+                      onChange={(e) => setProductTranslations(prev => ({ ...prev, [translationLang]: { ...prev[translationLang], Description: e.target.value } }))}
+                      rows={3} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+                    <button onClick={handleSaveTranslation} className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                      {t('admin.saveTranslation')}
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div className="flex flex-wrap items-center gap-4">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    checked={product.Active}
-                    onChange={(e) => handleUpdateProduct(product.Id, 'Active', e.target.checked)}
-                    className="w-4 h-4 rounded"
-                  />
-                  {t('admin.active')}
-                </label>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <input
-                    type="checkbox"
-                    checked={product.IsOffer}
-                    onChange={(e) => handleUpdateProduct(product.Id, 'IsOffer', e.target.checked)}
-                    className="w-4 h-4 rounded"
-                  />
-                  {t('admin.isOffer')}
-                </label>
-              </div>
             </div>
-            <button
-              onClick={() => handleDeleteProduct(product.Id)}
-              className="ml-4 text-red-600 hover:text-red-700"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }
