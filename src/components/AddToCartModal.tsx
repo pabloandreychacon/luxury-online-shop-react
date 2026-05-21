@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X, Check, ShoppingBag } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AddToCartModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface AddToCartModalProps {
 }
 
 export default function AddToCartModal({ isOpen, onClose, productName }: AddToCartModalProps) {
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isOpen) {
@@ -39,7 +41,7 @@ export default function AddToCartModal({ isOpen, onClose, productName }: AddToCa
           
           <div className="flex-1">
             <h3 className="text-lg font-luxury text-gray-900 dark:text-white mb-1">
-              Added to Cart!
+              {t('cart.addedToCartTitle')}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {productName}
@@ -51,7 +53,7 @@ export default function AddToCartModal({ isOpen, onClose, productName }: AddToCa
               className="inline-flex items-center gap-2 bg-luxury-gold text-luxury-dark px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition"
             >
               <ShoppingBag size={18} />
-              View Cart
+              {t('cart.viewCart')}
             </Link>
           </div>
         </div>

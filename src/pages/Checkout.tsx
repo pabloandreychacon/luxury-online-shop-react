@@ -50,7 +50,7 @@ export default function Checkout() {
       .select('*')
       .eq('IdBusiness', defaultSettings.id)
       .eq('Active', true);
-    
+
     if (data && data.length > 0) {
       setShippingMethods(data);
       setSelectedShipping(data[0]);
@@ -177,11 +177,10 @@ export default function Checkout() {
                 {shippingMethods.map(method => (
                   <label
                     key={method.Id}
-                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition ${
-                      selectedShipping?.Id === method.Id
+                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition ${selectedShipping?.Id === method.Id
                         ? 'border-luxury-gold bg-luxury-gold bg-opacity-10'
                         : 'border-gray-300 dark:border-gray-700'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <input
@@ -284,7 +283,7 @@ export default function Checkout() {
               <button
                 onClick={() => {
                   setShowSuccessModal(false);
-                  navigate('/');
+                  navigate('/shop');
                 }}
                 className="btn-primary w-full"
               >

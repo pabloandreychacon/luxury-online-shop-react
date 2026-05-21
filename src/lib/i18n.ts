@@ -123,6 +123,7 @@ const resources = {
         remove: 'Remove',
         quantity: 'Quantity',
         serviceFee: 'Service Fee (25%)',
+        addedToCartTitle: 'Added to Cart!',
         viewCart: 'View Cart',
       },
       checkout: {
@@ -411,6 +412,7 @@ const resources = {
         remove: '删除',
         quantity: '数量',
         serviceFee: '服务费 (25%)',
+        addedToCartTitle: '已加入购物车！',
         viewCart: '查看购物车',
       },
       checkout: {
@@ -700,6 +702,7 @@ const resources = {
         remove: 'Eliminar',
         quantity: 'Cantidad',
         serviceFee: 'Tarifa de Servicio (25%)',
+        addedToCartTitle: '¡Añadido al Carrito!',
         viewCart: 'Ver Carrito',
       },
       checkout: {
