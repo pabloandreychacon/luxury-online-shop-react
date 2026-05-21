@@ -63,14 +63,26 @@ export default function AdminProducts() {
 
     if (data && data.length > 0) {
       const ids = data.map(p => Number(p.Id));
-      const { data: media } = await supabase.from('ProductMedia').select('ProductId, MediaUrl, isVideo, DisplayOrder')
-        .in('ProductId', ids).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true });
-      const map: Record<string, { url: string; isVideo: boolean }> = {};
+
+      const [{ data: media }, { data: translations }] = await Promise.all([
+        supabase.from('ProductMedia').select('ProductId, MediaUrl, isVideo, DisplayOrder')
+          .in('ProductId', ids).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true }),
+        supabase.from('ProductTranslations').select('ProductId, Language, Name').in('ProductId', ids),
+      ]);
+
+      const mediaMap: Record<string, { url: string; isVideo: boolean }> = {};
       (media || []).forEach((m: any) => {
         const key = String(m.ProductId);
-        if (!map[key]) map[key] = { url: m.MediaUrl, isVideo: !!m.isVideo };
+        if (!mediaMap[key]) mediaMap[key] = { url: m.MediaUrl, isVideo: !!m.isVideo };
       });
-      setProductFirstMedia(map);
+      setProductFirstMedia(mediaMap);
+
+      const nameMap: Record<string, string> = {};
+      (translations || []).forEach((tr: any) => {
+        const key = String(tr.ProductId);
+        if (!nameMap[key] || tr.Language === 'en') nameMap[key] = tr.Name;
+      });
+      setProducts(prev => prev.map(p => ({ ...p, Name: nameMap[String(p.Id)] || p.Name || '' })));
     }
   };
 
@@ -153,6 +165,10 @@ export default function AdminProducts() {
       ProductId: Number(editingProduct.Id), Language: translationLang,
       Name: current.Name, Description: current.Description || null,
     }], { onConflict: 'ProductId,Language' });
+    if (translationLang === 'en' && current.Name) {
+      await supabase.from('Products').update({ Name: current.Name }).eq('Id', editingProduct.Id);
+      setProducts(prev => prev.map(p => p.Id === editingProduct.Id ? { ...p, Name: current.Name } : p));
+    }
     alert(t('admin.save') + ' ✓');
   };
 
@@ -166,6 +182,7 @@ export default function AdminProducts() {
     if (Object.values(newErrors).some(Boolean)) return;
 
     const { data: inserted } = await supabase.from('Products').insert([{
+      Name: newProduct.name,
       CategoryId: newProduct.categoryId, Price: newProduct.price, ProductId: 0,
       StockQuantity: newProduct.stockQuantity, BusinessEmail: defaultSettings.email,
       BrandId: newProduct.brandId, Taxes: newProduct.taxes, Active: true,

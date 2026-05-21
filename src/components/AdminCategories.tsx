@@ -71,7 +71,7 @@ export default function AdminCategories() {
         <h2 className="text-xl font-luxury text-gray-900 dark:text-white">
           {t('admin.addCategory')}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
             placeholder={t('admin.categoryName')}
@@ -86,13 +86,13 @@ export default function AdminCategories() {
             onChange={(e) => setNewCategory({ ...newCategory, displayName: e.target.value })}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
           />
-          <input
+          {/* <input
             type="number"
             placeholder={t('admin.categoryId')}
             value={newCategory.categoryId}
             onChange={(e) => setNewCategory({ ...newCategory, categoryId: parseInt(e.target.value) || 0 })}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-          />
+          /> */}
         </div>
         <button
           onClick={handleAddCategory}
