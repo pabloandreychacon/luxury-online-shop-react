@@ -111,21 +111,21 @@ export default function Orders() {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
         <div className="container-luxury max-w-md mx-auto text-center py-20">
-          <h1 className="text-3xl font-luxury mb-4">My Orders</h1>
+          <h1 className="text-3xl font-luxury mb-4">{t('orders.title')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Enter the email used during checkout to see your orders.
+            {t('orders.emailPrompt')}
           </p>
           <form onSubmit={handleGuestSearch} className="flex flex-col gap-4">
             <input
               type="email"
               required
-              placeholder="Email used at checkout"
+              placeholder={t('orders.emailPlaceholder')}
               value={guestEmailInput}
               onChange={(e) => setGuestEmailInput(e.target.value)}
               className="px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold outline-none"
             />
             <button type="submit" className="btn-primary">
-              Search Orders
+              {t('orders.search')}
             </button>
           </form>
         </div>
@@ -136,14 +136,14 @@ export default function Orders() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
       <div className="container-luxury">
-        <h1 className="font-luxury text-4xl mb-12">My Orders</h1>
+        <h1 className="font-luxury text-4xl mb-12">{t('orders.title')}</h1>
 
         {/* Filter */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex items-center gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Filter by Month
+                {t('orders.filterByMonth')}
               </label>
               <input
                 type="month"
@@ -153,14 +153,14 @@ export default function Orders() {
               />
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mt-6">
-              Showing {filteredOrders.length} of {orders.length} orders
+              {t('orders.showing')} {filteredOrders.length} {t('orders.of')} {orders.length} {t('orders.orders')}
             </div>
           </div>
         </div>
 
         {orders.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-600 dark:text-gray-400 text-lg mb-8">You haven't placed any orders yet.</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg mb-8">{t('orders.empty')}</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -170,7 +170,7 @@ export default function Orders() {
                 <div className="flex flex-col gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Order #{order.Id}
+                        {t('orders.order')} #{order.Id}
                       </h3>
                       <span className="text-sm text-gray-500 dark:text-gray-400">
                         {new Date(order.CreatedAt).toLocaleDateString()}
@@ -190,51 +190,51 @@ export default function Orders() {
                         onClick={() => toggleOrderItems(order.Id)}
                         className="text-sm text-luxury-gold hover:text-opacity-80 font-medium"
                       >
-                        {expandedOrders.has(order.Id) ? 'Hide Items' : 'Show Items'}
+                        {expandedOrders.has(order.Id) ? t('orders.hideItems') : t('orders.showItems')}
                       </button>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Total: ${order.TotalAmount.toFixed(2)}
+                      {t('orders.total')}: ${order.TotalAmount.toFixed(2)}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Shipping Method:</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{t('orders.shippingMethod')}:</span>
                       <p className="text-gray-600 dark:text-gray-400">{order.ShippingMethod || 'N/A'}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Tracking Number:</span>
-                      <p className="text-gray-600 dark:text-gray-400">{order.TrackingNumber || 'Not available'}</p>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{t('orders.trackingNumber')}:</span>
+                      <p className="text-gray-600 dark:text-gray-400">{order.TrackingNumber || t('orders.notAvailable')}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Estimated Delivery:</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{t('orders.estimatedDelivery')}:</span>
                       <p className="text-gray-600 dark:text-gray-400">
                         {order.EstimatedDeliveryDate ? new Date(order.EstimatedDeliveryDate).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Shipping Address:</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{t('orders.shippingAddress')}:</span>
                       <p className="text-gray-600 dark:text-gray-400">{order.ShippingAddress || 'N/A'}</p>
                     </div>
                   </div>
 
                   {order.Notes && (
                     <div className="text-sm">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Notes:</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{t('orders.notes')}:</span>
                       <p className="text-gray-600 dark:text-gray-400">{order.Notes}</p>
                     </div>
                   )}
 
                   {expandedOrders.has(order.Id) && orderItems[order.Id] && (
                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Order Items</h4>
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t('orders.orderItems')}</h4>
                       <div className="space-y-2">
                         {orderItems[order.Id].map((item) => (
                           <div key={item.Id} className="flex justify-between items-center bg-gray-50 dark:bg-gray-700 p-3 rounded">
                             <div>
                               <p className="text-sm font-medium text-gray-900 dark:text-white">{item.ProductName}</p>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">Qty: {item.Quantity} × ${item.Price.toFixed(2)}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">{t('orders.qty')}: {item.Quantity} × ${item.Price.toFixed(2)}</p>
                             </div>
                             <p className="text-sm font-semibold text-gray-900 dark:text-white">${item.ItemTotal.toFixed(2)}</p>
                           </div>

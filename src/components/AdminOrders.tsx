@@ -106,15 +106,15 @@ export default function AdminOrders() {
     <div className="space-y-6">
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('admin.filters')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Filter by Email
+              {t('admin.filterByEmail')}
             </label>
             <input
               type="text"
-              placeholder="Enter email..."
+              placeholder={t('admin.emailPlaceholder')}
               value={emailFilter}
               onChange={(e) => setEmailFilter(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
@@ -122,7 +122,7 @@ export default function AdminOrders() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Filter by Date
+              {t('admin.filterByDate')}
             </label>
             <input
               type="month"
@@ -133,7 +133,7 @@ export default function AdminOrders() {
           </div>
         </div>
         <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-          Showing {filteredOrders.length} of {orders.length} orders
+          {t('orders.showing')} {filteredOrders.length} {t('orders.of')} {orders.length} {t('orders.orders')}
         </div>
       </div>
 
@@ -143,7 +143,7 @@ export default function AdminOrders() {
             <div className="flex flex-col gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Order #{order.Id}
+                  {t('orders.order')} #{order.Id}
                 </h3>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   {new Date(order.CreatedAt).toLocaleDateString()}
@@ -154,7 +154,7 @@ export default function AdminOrders() {
                   onClick={() => toggleOrderItems(order.Id)}
                   className="text-sm text-luxury-gold hover:text-opacity-80 font-medium"
                 >
-                  {expandedOrders.has(order.Id) ? 'Hide Items' : 'Show Items'}
+                  {expandedOrders.has(order.Id) ? t('orders.hideItems') : t('orders.showItems')}
                 </button>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -233,13 +233,13 @@ export default function AdminOrders() {
 
             {expandedOrders.has(order.Id) && orderItems[order.Id] && (
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Order Items</h4>
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t('orders.orderItems')}</h4>
                 <div className="space-y-2">
                   {orderItems[order.Id].map((item) => (
                     <div key={item.Id} className="flex justify-between items-center bg-gray-50 dark:bg-gray-700 p-3 rounded">
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">{item.ProductName}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Qty: {item.Quantity} × ${item.Price}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">{t('orders.qty')}: {item.Quantity} × ${item.Price}</p>
                       </div>
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">${item.ItemTotal}</p>
                     </div>

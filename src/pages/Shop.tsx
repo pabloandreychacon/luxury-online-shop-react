@@ -139,8 +139,8 @@ export default function Shop() {
         <div className="mb-12">
           <h1 className="section-title">{t('shop.title')}</h1>
           <p className="text-center text-gray-600 dark:text-gray-400">
-            {category && `Showing ${category.charAt(0).toUpperCase() + category.slice(1)}s`}
-            {filteredProducts.length} products
+            {category && `${t('shop.showing')} ${category.charAt(0).toUpperCase() + category.slice(1)}s - `}
+            {filteredProducts.length} {t('shop.products')}
           </p>
         </div>
 
@@ -152,7 +152,7 @@ export default function Shop() {
 
               {/* Category Filter */}
               <div className="mb-8">
-                <label className="block text-sm font-semibold mb-4">Category</label>
+                <label className="block text-sm font-semibold mb-4">{t('shop.category')}</label>
                 <div className="space-y-2">
                   <button
                     onClick={() => setSelectedCategory('')}
@@ -161,7 +161,7 @@ export default function Shop() {
                       : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                       }`}
                   >
-                    All Products
+                    {t('shop.allProducts')}
                   </button>
                   {categories.map(cat => (
                     <button
@@ -189,7 +189,7 @@ export default function Shop() {
                       : 'hover:bg-gray-200 dark:hover:bg-gray-700'
                       }`}
                   >
-                    All Brands
+                    {t('shop.allBrands')}
                   </button>
                   {brands.map(brand => (
                     <button
@@ -219,7 +219,7 @@ export default function Shop() {
                   className="w-full"
                 />
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  Up to ${maxPrice.toLocaleString()}
+                  {t('shop.upTo')} ${maxPrice.toLocaleString()}
                 </p>
               </div>
 
@@ -231,10 +231,10 @@ export default function Shop() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
                 >
-                  <option value="featured">Featured</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
+                  <option value="featured">{t('shop.featured')}</option>
+                  <option value="price-low">{t('shop.priceLow')}</option>
+                  <option value="price-high">{t('shop.priceHigh')}</option>
+                  <option value="rating">{t('shop.highestRated')}</option>
                 </select>
               </div>
             </div>

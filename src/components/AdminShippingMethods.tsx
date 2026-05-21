@@ -85,7 +85,7 @@ export default function AdminShippingMethods() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Delivery Days
+              {t('admin.deliveryDays')}
             </label>
             <input
               type="number"
@@ -133,7 +133,7 @@ export default function AdminShippingMethods() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Delivery Days
+                    {t('admin.deliveryDays')}
                   </label>
                   <input
                     type="number"
