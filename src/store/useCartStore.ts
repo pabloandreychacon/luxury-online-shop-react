@@ -8,7 +8,7 @@ interface CartStore {
   total: number;
   itemCount: number;
   loadFromStorage: () => void;
-  addItem: (product: Product, quantity: number) => void;
+  addItem: (product: Product, quantity: number, priceListId?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -41,12 +41,12 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
   },
 
-  addItem: (product, quantity) => {
+  addItem: (product, quantity, priceListId = 0) => {
     const prevItems = get().items;
-    const existing = prevItems.find((i) => i.id === product.id);
+    const existing = prevItems.find((i) => i.id === product.id && (i.priceListId ?? 0) === priceListId);
     const items = existing
-      ? prevItems.map((i) => (i.id === product.id ? { ...i, quantity: i.quantity + quantity } : i))
-      : [...prevItems, { ...product, quantity }];
+      ? prevItems.map((i) => (i.id === product.id && (i.priceListId ?? 0) === priceListId ? { ...i, quantity: i.quantity + quantity } : i))
+      : [...prevItems, { ...product, quantity, priceListId }];
     saveToStorage(items);
     set({ items, showModal: true, lastAddedProduct: product.name, ...calcTotals(items) });
   },

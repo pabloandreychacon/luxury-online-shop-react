@@ -188,7 +188,7 @@ export default function ProductDetail() {
   }
 
   const handleAddToCart = () => {
-    addItem({ ...product, price: effectivePrice }, quantity);
+    addItem({ ...product, price: effectivePrice }, quantity, selectedPriceListId);
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 2000);
   };

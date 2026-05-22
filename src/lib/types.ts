@@ -15,6 +15,7 @@ export interface Product {
 
 export interface CartItem extends Product {
   quantity: number;
+  priceListId?: number;
 }
 
 export interface User {

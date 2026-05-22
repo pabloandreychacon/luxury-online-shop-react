@@ -29,6 +29,7 @@ export default function Checkout() {
   const [orderNumber, setOrderNumber] = useState(0);
 
   const [orderCompleted, setOrderCompleted] = useState(false);
+  const [priceLists, setPriceLists] = useState<{ Id: number; Label: string }[]>([]);
 
   useEffect(() => {
     if (items.length === 0 && !showSuccessModal && !orderCompleted) {
@@ -47,16 +48,16 @@ export default function Checkout() {
     setBusinessName(settings.businessName);
     setBusinessPhone(settings.phone);
 
-    const { data } = await supabase
-      .from('ShippingMethods')
-      .select('*')
-      .eq('IdBusiness', defaultSettings.id)
-      .eq('Active', true);
+    const [{ data: shippingData }, { data: priceListData }] = await Promise.all([
+      supabase.from('ShippingMethods').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true),
+      supabase.from('PriceLists').select('Id, Label').eq('Active', true).eq('IdBusiness', defaultSettings.id),
+    ]);
 
-    if (data && data.length > 0) {
-      setShippingMethods(data);
-      setSelectedShipping(data[0]);
+    if (shippingData && shippingData.length > 0) {
+      setShippingMethods(shippingData);
+      setSelectedShipping(shippingData[0]);
     }
+    setPriceLists(priceListData || []);
   };
 
   const saveOrder = async (paypalOrderId: string, buyerEmail: string, shippingAddress: string) => {
@@ -93,7 +94,8 @@ export default function Checkout() {
         Quantity: item.quantity,
         Price: item.price,
         ItemTotal: item.price * item.quantity,
-        OrderId: orderId
+        OrderId: orderId,
+        PriceListId: item.priceListId || null
       }]);
     }
 
@@ -101,9 +103,10 @@ export default function Checkout() {
   };
 
   const sendOrderEmail = async (orderNumber: number, buyerName: string, buyerEmail: string, shippingAddress: string) => {
-    const itemsList = items.map(item =>
-      `${item.name} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`
-    ).join('\n');
+    const itemsList = items.map(item => {
+      const priceListLabel = item.priceListId ? priceLists.find(pl => pl.Id === item.priceListId)?.Label : null;
+      return `${item.name}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`;
+    }).join('\n');
 
     const orderSummary = `Order Number: ${orderNumber}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`;
 

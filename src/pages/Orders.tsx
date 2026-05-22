@@ -26,6 +26,7 @@ interface OrderItem {
   Quantity: number;
   Price: number;
   ItemTotal: number;
+  PriceListId?: number;
 }
 
 export default function Orders() {
@@ -34,6 +35,7 @@ export default function Orders() {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [orderItems, setOrderItems] = useState<{ [orderId: number]: OrderItem[] }>({});
+  const [priceLists, setPriceLists] = useState<{ Id: number; Label: string }[]>([]);
   const [dateFilter, setDateFilter] = useState('');
 
   const ORDER_STATUSES = [
@@ -51,11 +53,14 @@ export default function Orders() {
     loadData();
   }, []);
 
-  const loadData = () => { /* placeholder for future use */ };
+  const loadData = async () => {
+    const { data } = await supabase.from('PriceLists').select('Id, Label').eq('Active', true).eq('IdBusiness', defaultSettings.id);
+    setPriceLists(data || []);
+  };
 
   useEffect(() => {
     let filtered = orders;
-    
+
     if (dateFilter) {
       filtered = filtered.filter(order => {
         const orderDate = new Date(order.CreatedAt);
@@ -63,7 +68,7 @@ export default function Orders() {
         return orderYearMonth === dateFilter;
       });
     }
-    
+
     setFilteredOrders(filtered);
   }, [orders, dateFilter]);
 
@@ -167,7 +172,7 @@ export default function Orders() {
             {filteredOrders.map((order) => (
               <div key={order.Id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
                 <div className="space-y-4">
-                <div className="flex flex-col gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
+                  <div className="flex flex-col gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {t('orders.order')} #{order.Id}
@@ -177,13 +182,12 @@ export default function Orders() {
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        order.StatusId === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                        order.StatusId === 2 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                        order.StatusId === 3 ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
-                        order.StatusId === 4 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${order.StatusId === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          order.StatusId === 2 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                            order.StatusId === 3 ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                              order.StatusId === 4 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        }`}>
                         {getStatusLabel(order.StatusId)}
                       </span>
                       <button
@@ -235,6 +239,11 @@ export default function Orders() {
                             <div>
                               <p className="text-sm font-medium text-gray-900 dark:text-white">{item.ProductName}</p>
                               <p className="text-xs text-gray-600 dark:text-gray-400">{t('orders.qty')}: {item.Quantity} × ${item.Price.toFixed(2)}</p>
+                              {item.PriceListId ? (
+                                <p className="text-xs text-luxury-gold">
+                                  {priceLists.find(pl => pl.Id === item.PriceListId)?.Label || `#${item.PriceListId}`}
+                                </p>
+                              ) : null}
                             </div>
                             <p className="text-sm font-semibold text-gray-900 dark:text-white">${item.ItemTotal.toFixed(2)}</p>
                           </div>

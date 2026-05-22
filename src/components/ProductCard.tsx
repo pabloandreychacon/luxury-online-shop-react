@@ -24,7 +24,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const effectivePrice = priceListOptions.find(o => o.id === selectedPriceListId)?.price ?? product.price;
 
   const handleAddToCart = () => {
-    addItem({ ...product, price: effectivePrice }, quantity);
+    addItem({ ...product, price: effectivePrice }, quantity, selectedPriceListId);
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 2000);
   };

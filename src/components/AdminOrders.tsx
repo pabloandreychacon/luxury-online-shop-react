@@ -26,6 +26,7 @@ interface OrderItem {
   Quantity: number;
   Price: number;
   ItemTotal: number;
+  PriceListId?: number;
 }
 
 interface PendingUpdate {
@@ -44,6 +45,7 @@ export default function AdminOrders() {
   const [dateFilter, setDateFilter] = useState('');
   const [emailSent, setEmailSent] = useState<number | null>(null);
   const [pendingUpdate, setPendingUpdate] = useState<PendingUpdate | null>(null);
+  const [priceLists, setPriceLists] = useState<{ Id: number; Label: string }[]>([]);
 
   const ORDER_STATUSES = [
     { id: 1, label: t('admin.orderStatusPaid') },
@@ -53,7 +55,12 @@ export default function AdminOrders() {
 
   const EMAIL_TRIGGER_FIELDS = ['StatusId', 'TrackingNumber', 'Notes'];
 
-  useEffect(() => { loadOrders(); }, []);
+  useEffect(() => { loadOrders(); loadPriceLists(); }, []);
+
+  const loadPriceLists = async () => {
+    const { data } = await supabase.from('PriceLists').select('Id, Label').eq('Active', true).eq('IdBusiness', defaultSettings.id);
+    setPriceLists(data || []);
+  };
 
   useEffect(() => {
     let filtered = orders;
@@ -87,9 +94,10 @@ export default function AdminOrders() {
     const { data: items } = await supabase.from('OrderItems').select('*').eq('OrderId', orderId);
     const settings = await getSettings();
 
-    const itemsList = (items || []).map((item: any) =>
-      `${item.ProductName} - Qty: ${item.Quantity} x $${item.Price.toFixed(2)} = $${item.ItemTotal.toFixed(2)}`
-    ).join('\n');
+    const itemsList = (items || []).map((item: any) => {
+      const priceListLabel = item.PriceListId ? priceLists.find(pl => pl.Id === item.PriceListId)?.Label : null;
+      return `${item.ProductName}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.Quantity} x $${item.Price.toFixed(2)} = $${item.ItemTotal.toFixed(2)}`;
+    }).join('\n');
 
     await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
@@ -275,6 +283,11 @@ export default function AdminOrders() {
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">{item.ProductName}</p>
                         <p className="text-xs text-gray-600 dark:text-gray-400">{t('orders.qty')}: {item.Quantity} × ${item.Price}</p>
+                        {item.PriceListId ? (
+                          <p className="text-xs text-luxury-gold">
+                            {priceLists.find(pl => pl.Id === item.PriceListId)?.Label || `#${item.PriceListId}`}
+                          </p>
+                        ) : null}
                       </div>
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">${item.ItemTotal}</p>
                     </div>
