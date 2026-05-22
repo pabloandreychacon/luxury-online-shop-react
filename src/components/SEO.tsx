@@ -77,7 +77,7 @@ const SEO: React.FC<SEOProps> = ({
     // Basic Meta Tags
     updateMetaTag('description', metaDescription);
     updateMetaTag('keywords', metaKeywords);
-    updateMetaTag('author', 'Pablo Andrey Chacon Luna');
+    updateMetaTag('author', 'Luxury E-commerce Store');
     updateMetaTag('robots', noIndex ? 'noindex, nofollow' : 'index, follow');
 
     // Canonical URL
