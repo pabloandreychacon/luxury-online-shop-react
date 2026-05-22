@@ -23,7 +23,7 @@ interface Product {
 
 interface Category { Id: string; Name: string; DisplayName: string; CategoryId: number; }
 interface Brand { Id: string; Name: string; DisplayName: string; Active: boolean; IdBusiness: number; }
-interface PriceList { Id: number; Code: string; Label: string; Active: boolean; }
+interface PriceList { Id: number; Code: string; Label: string; Active: boolean; IdBusiness: number; }
 interface ProductListPrice { Id: number; ProductId: number; PriceListId: number; Price: number; }
 interface ProductMediaItem {
   Id: number; ProductId: number; MediaType: 'image' | 'video';
@@ -108,7 +108,7 @@ export default function AdminProducts() {
   };
 
   const loadPriceLists = async () => {
-    const { data } = await supabase.from('PriceLists').select('*').eq('Active', true);
+    const { data } = await supabase.from('PriceLists').select('*').eq('Active', true).eq('IdBusiness', defaultSettings.id);
     setPriceLists(data || []);
     if (data && data.length > 0) setSelectedPriceListId(data[0].Id);
   };
@@ -217,7 +217,7 @@ export default function AdminProducts() {
 
   const handleAddProduct = async () => {
     const newErrors = { name: '', price: '', category: '', brand: '' };
-            if (!newProduct.name) newErrors.name = t('admin.required');
+    if (!newProduct.name) newErrors.name = t('admin.required');
     if (!newProduct.price || newProduct.price <= 0) newErrors.price = t('admin.required');
     if (!newProduct.categoryId) newErrors.category = t('admin.required');
     if (!newProduct.brandId) newErrors.brand = t('admin.required');

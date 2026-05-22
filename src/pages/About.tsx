@@ -7,6 +7,7 @@ export default function About() {
   const [businessName, setBusinessName] = useState('Costa Rica Luxury');
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     const loadSettings = async () => {
       const settings = await getSettings();
       setBusinessName(settings.businessName);

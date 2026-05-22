@@ -390,6 +390,7 @@ const resources = {
       },
       product: {
         category: '类别',
+        brand: '品牌',
         price: '价格',
         description: '描述',
         material: '材质',

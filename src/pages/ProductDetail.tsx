@@ -30,6 +30,7 @@ export default function ProductDetail() {
     : 0;
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (id) {
       loadProduct();
     }

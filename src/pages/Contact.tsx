@@ -21,6 +21,7 @@ export default function Contact() {
   const [longitude, setLongitude] = useState(0);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     const loadSettings = async () => {
       const settings = await getSettings();
       setBusinessEmail(settings.email);

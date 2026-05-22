@@ -25,6 +25,7 @@ export default function Admin() {
   }, []);
 
   const loadSettings = async () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     const data = await getSettings();
     setSettings(data);
   };
