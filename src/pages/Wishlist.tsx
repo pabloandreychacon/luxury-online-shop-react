@@ -88,6 +88,7 @@ export default function Wishlist() {
                 <img
                   src={product.image}
                   alt={product.name}
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                 />
               )}

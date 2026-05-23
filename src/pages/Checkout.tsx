@@ -164,26 +164,26 @@ export default function Checkout() {
                 {items.map(item => (
                   <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0">
                     {item.image?.match(/\.(mp4|webm|ogg)$/i) ? (
-                      <video src={item.image} className="w-20 h-20 object-cover rounded" autoPlay muted loop playsInline />
+                      <video src={item.image} className="w-16 h-16 object-cover rounded flex-shrink-0" autoPlay muted loop playsInline />
                     ) : (
-                      <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
+                      <img src={item.image} alt={item.name} referrerPolicy="no-referrer" className="w-16 h-16 object-cover rounded flex-shrink-0" />
                     )}
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{item.name}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm truncate">{item.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">${item.price.toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={item.quantity}
-                        onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                        className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center"
-                      />
-                      <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700">
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="flex items-center gap-2 mt-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={item.quantity}
+                          onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                          className="w-14 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center text-sm"
+                        />
+                        <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 flex-shrink-0">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
