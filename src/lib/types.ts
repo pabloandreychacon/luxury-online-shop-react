@@ -11,6 +11,7 @@ export interface Product {
   reviews: number;
   taxes?: number;
   brandId?: number;
+  brandName?: string;
 }
 
 export interface CartItem extends Product {

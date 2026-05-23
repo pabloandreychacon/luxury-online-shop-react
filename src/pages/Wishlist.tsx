@@ -115,9 +115,16 @@ export default function Wishlist() {
               </div>
 
               {/* Name */}
-              <h3 className="font-luxury text-lg mb-2 text-gray-900 dark:text-gray-100 line-clamp-2">
+              <h3 className="font-luxury text-lg mb-1 text-gray-900 dark:text-gray-100 line-clamp-2">
                 {product.name}
               </h3>
+
+              {/* Brand */}
+              {product.brandName && (
+                <p className="text-xs font-semibold tracking-widest text-luxury-gold/80 uppercase mb-2">
+                  {product.brandName}
+                </p>
+              )}
 
               {/* Material */}
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">

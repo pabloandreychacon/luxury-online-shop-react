@@ -98,11 +98,17 @@ export default function Orders() {
     } else {
       newExpanded.add(orderId);
       if (!orderItems[orderId]) {
-        const { data } = await supabase
-          .from('OrderItems')
-          .select('*')
-          .eq('OrderId', orderId);
-        setOrderItems(prev => ({ ...prev, [orderId]: data || [] }));
+        const { data } = await supabase.from('OrderItems').select('*').eq('OrderId', orderId);
+        const items = data || [];
+        if (items.length > 0) {
+          const ids = items.map((i: any) => i.ProductId).filter(Boolean);
+          const { data: products } = await supabase.from('Products').select('Id, Name').in('Id', ids);
+          const nameMap: Record<number, string> = {};
+          (products || []).forEach((p: any) => { nameMap[p.Id] = p.Name; });
+          setOrderItems(prev => ({ ...prev, [orderId]: items.map((i: any) => ({ ...i, ProductName: nameMap[i.ProductId] || i.ProductName || i.productName || '—' })) }));
+        } else {
+          setOrderItems(prev => ({ ...prev, [orderId]: [] }));
+        }
       }
     }
     setExpandedOrders(newExpanded);

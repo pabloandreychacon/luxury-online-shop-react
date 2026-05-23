@@ -166,7 +166,7 @@ export default function Header() {
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
               <select
                 value={i18n.language}
-                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                onChange={(e) => { setMenuOpen(false); i18n.changeLanguage(e.target.value); }}
                 className="w-full text-sm font-semibold bg-transparent text-gray-700 dark:text-gray-300 hover:text-luxury-gold focus:outline-none cursor-pointer py-1"
               >
                 {langOptions.map((l) => (

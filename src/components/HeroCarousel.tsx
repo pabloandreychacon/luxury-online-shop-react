@@ -31,7 +31,7 @@ interface OfferProduct {
 }
 
 const HeroCarousel = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<OfferProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,18 +74,23 @@ const HeroCarousel = () => {
           (brandsData || []).forEach((b: any) => { brandMap[b.Id] = b.DisplayName || b.Name; });
         }
         if (productIds.length > 0) {
-          const { data: mediaData } = await supabase
-            .from('ProductMedia')
-            .select('ProductId, MediaUrl, DisplayOrder')
-            .in('ProductId', productIds)
-            .eq('IdBusiness', defaultSettings.id)
-            .order('DisplayOrder', { ascending: true });
+          const [{ data: mediaData }, { data: translationsData }] = await Promise.all([
+            supabase.from('ProductMedia').select('ProductId, MediaUrl, DisplayOrder')
+              .in('ProductId', productIds).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true }),
+            supabase.from('ProductTranslations').select('ProductId, Language, Name, Description')
+              .in('ProductId', productIds),
+          ]);
+
+          const trMap: Record<number, Record<string, { Name: string; Description?: string }>> = {};
+          (translationsData || []).forEach((tr: any) => {
+            trMap[tr.ProductId] = trMap[tr.ProductId] || {};
+            trMap[tr.ProductId][tr.Language] = { Name: tr.Name, Description: tr.Description };
+          });
 
           const mediaMap: Record<number, string> = {};
           if (mediaData) {
             mediaData.forEach((media) => {
               const existing = mediaMap[media.ProductId];
-              // prefer video over image
               if (!existing || (!isVideo(existing) && isVideo(media.MediaUrl))) {
                 mediaMap[media.ProductId] = media.MediaUrl;
               }
@@ -93,11 +98,16 @@ const HeroCarousel = () => {
           }
 
           setSlides(slidesWithMedia
-            .map((slide) => ({
-              ...slide,
-              ImageUrl: (mediaMap[slide.Id] || slide.ImageUrl || '').trim(),
-              BrandName: brandMap[slide.BrandId] || ''
-            }))
+            .map((slide) => {
+              const tr = trMap[slide.Id]?.[i18n.language];
+              return {
+                ...slide,
+                Name: tr?.Name || slide.Name,
+                Description: tr?.Description || slide.Description,
+                ImageUrl: (mediaMap[slide.Id] || slide.ImageUrl || '').trim(),
+                BrandName: brandMap[slide.BrandId] || ''
+              };
+            })
             .filter((slide) => slide.ImageUrl !== '')
           );
         } else {
@@ -114,7 +124,7 @@ const HeroCarousel = () => {
     };
 
     loadOffers();
-  }, []);
+  }, [i18n.language]);
 
   useEffect(() => {
     if (slides.length === 0) return;
@@ -176,7 +186,7 @@ const HeroCarousel = () => {
               className="w-full h-full object-cover object-center scale-105 animate-slow-zoom"
             />
           )}
-          <div className="absolute inset-0 z-20 flex items-center pt-20">
+          <div className="absolute inset-0 z-20 flex items-center">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 border border-luxury-gold/30 px-3 py-1 rounded-sm bg-luxury-gold/10">
@@ -200,7 +210,7 @@ const HeroCarousel = () => {
                   {currencySymbol}{slide.Price}
                 </p>
 
-                <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-xl leading-relaxed">
+                <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-xl leading-relaxed line-clamp-4">
                   {slide.Description}
                 </p>
 

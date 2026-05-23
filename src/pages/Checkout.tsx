@@ -86,11 +86,17 @@ export default function Checkout() {
 
     const orderId = orderData[0].Id;
 
+    // fetch default names from Products table as fallback
+    const productIds = items.map(item => parseInt(item.id));
+    const { data: productsData } = await supabase.from('Products').select('Id, Name').in('Id', productIds);
+    const productNameMap: Record<number, string> = {};
+    (productsData || []).forEach((p: any) => { productNameMap[p.Id] = p.Name; });
+
     for (const item of items) {
       await supabase.from('OrderItems').insert([{
         PaypalOrderId: paypalOrderId,
         ProductId: parseInt(item.id),
-        ProductName: item.name,
+        ProductName: item.name || productNameMap[parseInt(item.id)] || '',
         Quantity: item.quantity,
         Price: item.price,
         ItemTotal: item.price * item.quantity,
@@ -99,13 +105,14 @@ export default function Checkout() {
       }]);
     }
 
-    return orderId;
+    return { orderId, productNameMap };
   };
 
-  const sendOrderEmail = async (orderNumber: number, buyerName: string, buyerEmail: string, shippingAddress: string) => {
+  const sendOrderEmail = async (orderNumber: number, buyerName: string, buyerEmail: string, shippingAddress: string, productNameMap: Record<number, string>) => {
     const itemsList = items.map(item => {
       const priceListLabel = item.priceListId ? priceLists.find(pl => pl.Id === item.priceListId)?.Label : null;
-      return `${item.name}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`;
+      const name = productNameMap[parseInt(item.id)] || item.name;
+      return `${name}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`;
     }).join('\n');
 
     const orderSummary = `Order Number: ${orderNumber}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`;
@@ -259,10 +266,12 @@ export default function Checkout() {
                         `${details.purchase_units[0].shipping.address.address_line_1}, ${details.purchase_units[0].shipping.address.admin_area_2}, ${details.purchase_units[0].shipping.address.admin_area_1} ${details.purchase_units[0].shipping.address.postal_code}` :
                         'N/A';
 
-                      const orderId = await saveOrder(data.orderID, buyerEmail, shippingAddress);
+                      const result = await saveOrder(data.orderID, buyerEmail, shippingAddress);
+                      const orderId = result?.orderId;
+                      const productNameMap = result?.productNameMap || {};
 
                       if (orderId) {
-                        await sendOrderEmail(orderId, buyerName, buyerEmail, shippingAddress);
+                        await sendOrderEmail(orderId, buyerName, buyerEmail, shippingAddress, productNameMap);
                         setOrderNumber(orderId);
                         setOrderCompleted(true);
                         setShowSuccessModal(true);

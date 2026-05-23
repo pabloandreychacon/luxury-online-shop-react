@@ -92,11 +92,19 @@ export default function AdminOrders() {
     if (!mergedOrder.BuyerEmail || !mergedOrder.TrackingNumber) return;
 
     const { data: items } = await supabase.from('OrderItems').select('*').eq('OrderId', orderId);
+    const itemsList2 = (items || []);
+    let nameMap: Record<number, string> = {};
+    if (itemsList2.length > 0) {
+      const ids = itemsList2.map((i: any) => i.ProductId).filter(Boolean);
+      const { data: products } = await supabase.from('Products').select('Id, Name').in('Id', ids);
+      (products || []).forEach((p: any) => { nameMap[p.Id] = p.Name; });
+    }
     const settings = await getSettings();
 
-    const itemsList = (items || []).map((item: any) => {
+    const itemsList = itemsList2.map((item: any) => {
       const priceListLabel = item.PriceListId ? priceLists.find(pl => pl.Id === item.PriceListId)?.Label : null;
-      return `${item.ProductName}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.Quantity} x $${item.Price.toFixed(2)} = $${item.ItemTotal.toFixed(2)}`;
+      const name = nameMap[item.ProductId] || item.ProductName || '';
+      return `${name}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.Quantity} x $${item.Price.toFixed(2)} = $${item.ItemTotal.toFixed(2)}`;
     }).join('\n');
 
     await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -147,7 +155,16 @@ export default function AdminOrders() {
       newExpanded.add(orderId);
       if (!orderItems[orderId]) {
         const { data } = await supabase.from('OrderItems').select('*').eq('OrderId', orderId);
-        setOrderItems(prev => ({ ...prev, [orderId]: data || [] }));
+        const items = data || [];
+        if (items.length > 0) {
+          const ids = items.map((i: any) => i.ProductId).filter(Boolean);
+          const { data: products } = await supabase.from('Products').select('Id, Name').in('Id', ids);
+          const nameMap: Record<number, string> = {};
+          (products || []).forEach((p: any) => { nameMap[p.Id] = p.Name; });
+          setOrderItems(prev => ({ ...prev, [orderId]: items.map((i: any) => ({ ...i, ProductName: nameMap[i.ProductId] || i.ProductName || i.productName || '—' })) }));
+        } else {
+          setOrderItems(prev => ({ ...prev, [orderId]: [] }));
+        }
       }
     }
     setExpandedOrders(newExpanded);

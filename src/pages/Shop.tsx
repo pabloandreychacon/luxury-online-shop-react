@@ -82,23 +82,25 @@ export default function Shop() {
         });
       }
 
+      const brandMap: Record<number, string> = {};
+      (brandsData || []).forEach((b: any) => { brandMap[b.Id] = b.DisplayName || b.Name; });
+
       const mappedProducts: Product[] = productsData.map(p => {
         const cat = categoriesData.find(c => c.Id === p.CategoryId);
-        // pick translation for current language, or first available
         const trs = translationsMap[p.Id] || {};
-        const preferred = trs[i18n.language];
-        const first = Object.values(trs)[0];
+        const tr = trs[i18n.language];
         return {
           id: String(p.Id),
-          name: preferred?.Name || first?.Name || '',
+          name: tr?.Name || p.Name || '',
           category: cat?.Name?.toLowerCase() || '',
           price: p.Price,
           image: mediaMap[p.Id] || p.ImageUrl || '',
-          description: preferred?.Description || first?.Description || '',
+          description: tr?.Description || p.Description || '',
           material: '',
           rating: 4.5,
           reviews: 0,
-          brandId: p.BrandId || 0
+          brandId: p.BrandId || 0,
+          brandName: brandMap[p.BrandId] || ''
         };
       });
       setProducts(mappedProducts);

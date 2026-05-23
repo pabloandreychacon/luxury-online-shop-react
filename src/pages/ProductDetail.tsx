@@ -20,6 +20,7 @@ export default function ProductDetail() {
   const [showAdded, setShowAdded] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
+  const [brandName, setBrandName] = useState('');
   const [mediaItems, setMediaItems] = useState<{ MediaUrl: string; isVideo: boolean }[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const priceListOptions = useProductPriceLists(id || '');
@@ -60,21 +61,31 @@ export default function ProductDetail() {
 
       const trMap: Record<string, { Name: string; Description?: string }> = {};
       (trAll || []).forEach((r) => { trMap[r.Language] = { Name: r.Name, Description: r.Description }; });
-      const preferred = trMap[i18n.language] || Object.values(trMap)[0];
+      const tr = trMap[i18n.language];
 
       const mappedProduct: Product = {
         id: String(productData.Id),
-        name: preferred?.Name || '',
+        name: tr?.Name || productData.Name || '',
         category: categoryData?.Name?.toLowerCase() || '',
         price: productData.Price,
         image: productData.ImageUrl,
-        description: preferred?.Description || '',
+        description: tr?.Description || productData.Description || '',
         material: '',
         rating: 4.5,
-        reviews: 0
+        reviews: 0,
+        brandId: productData.BrandId || 0
       };
 
       setProduct(mappedProduct);
+
+      if (productData.BrandId) {
+        const { data: brandData } = await supabase.from('Brands').select('Name, DisplayName').eq('Id', productData.BrandId).maybeSingle();
+        const name = brandData?.DisplayName || brandData?.Name || '';
+        setBrandName(name);
+        setProduct(prev => prev ? { ...prev, brandName: name } : prev);
+      } else {
+        setBrandName('');
+      }
 
       await loadProductMedia(productData.Id, productData.ImageUrl);
 
@@ -158,14 +169,14 @@ export default function ProductDetail() {
 
       const mapped: Product[] = data.map(p => {
         const trs = trMap[p.Id] || {};
-        const preferred = trs[i18n.language] || Object.values(trs)[0];
+        const tr = trs[i18n.language];
         return {
           id: String(p.Id),
-          name: preferred?.Name || '',
+          name: tr?.Name || p.Name || '',
           category: categoryData?.Name?.toLowerCase() || '',
           price: p.Price,
           image: mediaMap[p.Id] || p.ImageUrl,
-          description: preferred?.Description || '',
+          description: tr?.Description || p.Description || '',
           material: '',
           rating: 4.5,
           reviews: 0
@@ -328,9 +339,16 @@ export default function ProductDetail() {
             </div>
 
             {/* Product Name */}
-            <h1 className="font-luxury text-4xl mb-2 text-gray-900 dark:text-gray-100">
+            <h1 className="font-luxury text-4xl mb-1 text-gray-900 dark:text-gray-100">
               {product.name}
             </h1>
+
+            {/* Brand */}
+            {brandName && (
+              <p className="text-sm font-semibold tracking-widest text-luxury-gold/80 uppercase mb-4">
+                {brandName}
+              </p>
+            )}
 
             {/* Description */}
             <p className="text-gray-600 dark:text-gray-400 text-lg mb-8">

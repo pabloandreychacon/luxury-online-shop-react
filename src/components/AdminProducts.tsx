@@ -45,6 +45,9 @@ export default function AdminProducts() {
   const [productListPrices, setProductListPrices] = useState<ProductListPrice[]>([]);
   const [selectedPriceListId, setSelectedPriceListId] = useState<number>(0);
   const [priceListInputValue, setPriceListInputValue] = useState<string>('');
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editFields, setEditFields] = useState({ Price: 0, CategoryId: 0, BrandId: 0, Taxes: 0, Weigth: 0, Active: true, IsOffer: false });
   const [langOptions, setLangOptions] = useState([
     { code: 'en', label: '🇺🇸 EN' },
     { code: 'es', label: '🇪🇸 ES' },
@@ -65,31 +68,19 @@ export default function AdminProducts() {
 
   const loadProducts = async () => {
     const { data } = await supabase.from('Products').select('*').eq('IdBusiness', defaultSettings.id);
-    setProducts(data || []);
+    if (!data) return;
 
-    if (data && data.length > 0) {
-      const ids = data.map(p => Number(p.Id));
+    const ids = data.map(p => Number(p.Id));
+    const { data: media } = await supabase.from('ProductMedia').select('ProductId, MediaUrl, isVideo, DisplayOrder')
+      .in('ProductId', ids).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true });
 
-      const [{ data: media }, { data: translations }] = await Promise.all([
-        supabase.from('ProductMedia').select('ProductId, MediaUrl, isVideo, DisplayOrder')
-          .in('ProductId', ids).eq('IdBusiness', defaultSettings.id).order('DisplayOrder', { ascending: true }),
-        supabase.from('ProductTranslations').select('ProductId, Language, Name').in('ProductId', ids),
-      ]);
-
-      const mediaMap: Record<string, { url: string; isVideo: boolean }> = {};
-      (media || []).forEach((m: any) => {
-        const key = String(m.ProductId);
-        if (!mediaMap[key]) mediaMap[key] = { url: m.MediaUrl, isVideo: !!m.isVideo };
-      });
-      setProductFirstMedia(mediaMap);
-
-      const nameMap: Record<string, string> = {};
-      (translations || []).forEach((tr: any) => {
-        const key = String(tr.ProductId);
-        if (!nameMap[key] || tr.Language === 'en') nameMap[key] = tr.Name;
-      });
-      setProducts(prev => prev.map(p => ({ ...p, Name: nameMap[String(p.Id)] || p.Name || '' })));
-    }
+    const mediaMap: Record<string, { url: string; isVideo: boolean }> = {};
+    (media || []).forEach((m: any) => {
+      const key = String(m.ProductId);
+      if (!mediaMap[key]) mediaMap[key] = { url: m.MediaUrl, isVideo: !!m.isVideo };
+    });
+    setProductFirstMedia(mediaMap);
+    setProducts(data);
   };
 
   const loadCategories = async () => {
@@ -115,6 +106,9 @@ export default function AdminProducts() {
 
   const openEdit = async (product: Product) => {
     setEditingProduct(product);
+    setEditName(product.Name || '');
+    setEditDescription(product.Description || '');
+    setEditFields({ Price: product.Price, CategoryId: product.CategoryId, BrandId: product.BrandId || 0, Taxes: product.Taxes, Weigth: product.Weigth, Active: product.Active, IsOffer: product.IsOffer });
     setTranslationLang('en');
 
     const [{ data: media }, { data: translations }, { data: listPrices }] = await Promise.all([
@@ -176,6 +170,24 @@ export default function AdminProducts() {
   const toggleMediaVideo = async (mediaId: number, isVideo: boolean) => {
     await supabase.from('ProductMedia').update({ isVideo, MediaType: isVideo ? 'video' : 'image' }).eq('Id', mediaId);
     setProductMedia(prev => prev.map(m => m.Id === mediaId ? { ...m, isVideo, MediaType: isVideo ? 'video' : 'image' } : m));
+  };
+
+  const handleSaveNameDescription = async () => {
+    if (!editingProduct) return;
+    await supabase.from('Products').update({
+      Name: editName,
+      Description: editDescription,
+      Price: editFields.Price,
+      CategoryId: editFields.CategoryId,
+      BrandId: editFields.BrandId || null,
+      Taxes: editFields.Taxes,
+      Weigth: editFields.Weigth,
+      Active: editFields.Active,
+      IsOffer: editFields.IsOffer,
+    }).eq('Id', editingProduct.Id);
+    setEditingProduct(prev => prev ? { ...prev, Name: editName, Description: editDescription, ...editFields } : prev);
+    setProducts(prev => prev.map(p => p.Id === editingProduct.Id ? { ...p, Name: editName, ...editFields } : p));
+    alert(t('admin.save') + ' ✓');
   };
 
   const handlePriceListChange = (priceListId: number) => {
@@ -268,18 +280,21 @@ export default function AdminProducts() {
           <h2 className="text-xl font-luxury text-gray-900 dark:text-white">{t('admin.addProduct')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.name')}</label>
               <input type="text" placeholder={t('common.name')} value={newProduct.name}
                 onChange={(e) => { setNewProduct({ ...newProduct, name: e.target.value }); setErrors({ ...errors, name: '' }); }}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`} />
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.price')}</label>
               <input type="number" placeholder={t('product.price')} value={newProduct.price}
                 onChange={(e) => { setNewProduct({ ...newProduct, price: parseFloat(e.target.value) || 0 }); setErrors({ ...errors, price: '' }); }}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`} />
               {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.category')}</label>
               <select value={newProduct.categoryId}
                 onChange={(e) => { setNewProduct({ ...newProduct, categoryId: parseInt(e.target.value) }); setErrors({ ...errors, category: '' }); }}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`}>
@@ -289,6 +304,7 @@ export default function AdminProducts() {
               {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.brand')}</label>
               <select value={newProduct.brandId}
                 onChange={(e) => { setNewProduct({ ...newProduct, brandId: parseInt(e.target.value) }); setErrors({ ...errors, brand: '' }); }}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-luxury-gold ${errors.brand ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`}>
@@ -297,15 +313,24 @@ export default function AdminProducts() {
               </select>
               {errors.brand && <p className="text-red-500 text-sm mt-1">{errors.brand}</p>}
             </div>
-            <input type="number" placeholder={t('admin.taxes')} value={newProduct.taxes}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('admin.taxes')}</label>
+              <input type="number" placeholder={t('admin.taxes')} value={newProduct.taxes}
               onChange={(e) => setNewProduct({ ...newProduct, taxes: parseFloat(e.target.value) || 0 })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
-            <input type="number" step="0.01" placeholder={t('admin.weight')} value={newProduct.weight}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('admin.weight')}</label>
+              <input type="number" step="0.01" placeholder={t('admin.weight')} value={newProduct.weight}
               onChange={(e) => setNewProduct({ ...newProduct, weight: parseFloat(e.target.value) || 0 })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
-            <textarea placeholder={t('product.description')} value={newProduct.description}
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.description')}</label>
+              <textarea placeholder={t('product.description')} value={newProduct.description}
               onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold md:col-span-2" rows={2} />
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" rows={2} />
+            </div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={newProduct.isOffer} onChange={(e) => setNewProduct({ ...newProduct, isOffer: e.target.checked })} className="w-4 h-4 rounded" />
               {t('admin.isOffer')}
@@ -417,50 +442,71 @@ export default function AdminProducts() {
             </div>
 
             <div className="p-6 space-y-6">
+              {/* Name & Description */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('common.name')}</label>
+                  <input type="text" value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.description')}</label>
+                  <textarea value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    rows={3} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+                </div>
+              </div>
+
               {/* Basic Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.price')} (base)</label>
-                  <input type="number" value={editingProduct.Price}
-                    onChange={(e) => handleUpdateProduct('Price', parseFloat(e.target.value))}
+                  <input type="number" value={editFields.Price}
+                    onChange={(e) => setEditFields(f => ({ ...f, Price: parseFloat(e.target.value) || 0 }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.category')}</label>
-                  <select value={editingProduct.CategoryId} onChange={(e) => handleUpdateProduct('CategoryId', parseInt(e.target.value))}
+                  <select value={editFields.CategoryId} onChange={(e) => setEditFields(f => ({ ...f, CategoryId: parseInt(e.target.value) }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold">
                     {categories.map(c => <option key={c.Id} value={c.Id}>{c.DisplayName}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('product.brand')}</label>
-                  <select value={editingProduct.BrandId || 0} onChange={(e) => handleUpdateProduct('BrandId', parseInt(e.target.value))}
+                  <select value={editFields.BrandId} onChange={(e) => setEditFields(f => ({ ...f, BrandId: parseInt(e.target.value) }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold">
-                    <option value="0">-- {t('product.brand')} --</option>
+                    <option value={0}>-- {t('product.brand')} --</option>
                     {brands.map(b => <option key={b.Id} value={b.Id}>{b.DisplayName || b.Name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('admin.taxes')}</label>
-                  <input type="number" defaultValue={editingProduct.Taxes}
-                    onBlur={(e) => handleUpdateProduct('Taxes', parseFloat(e.target.value) || 0)}
+                  <input type="number" value={editFields.Taxes}
+                    onChange={(e) => setEditFields(f => ({ ...f, Taxes: parseFloat(e.target.value) || 0 }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('admin.weight')}</label>
-                  <input type="number" step="0.01" defaultValue={editingProduct.Weigth}
-                    onBlur={(e) => handleUpdateProduct('Weigth', parseFloat(e.target.value) || 0)}
+                  <input type="number" step="0.01" value={editFields.Weigth}
+                    onChange={(e) => setEditFields(f => ({ ...f, Weigth: parseFloat(e.target.value) || 0 }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
                 </div>
                 <div className="flex items-center gap-4 mt-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    <input type="checkbox" checked={editingProduct.Active} onChange={(e) => handleUpdateProduct('Active', e.target.checked)} className="w-4 h-4 rounded" />
+                    <input type="checkbox" checked={editFields.Active} onChange={(e) => setEditFields(f => ({ ...f, Active: e.target.checked }))} className="w-4 h-4 rounded" />
                     {t('admin.active')}
                   </label>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    <input type="checkbox" checked={editingProduct.IsOffer} onChange={(e) => handleUpdateProduct('IsOffer', e.target.checked)} className="w-4 h-4 rounded" />
+                    <input type="checkbox" checked={editFields.IsOffer} onChange={(e) => setEditFields(f => ({ ...f, IsOffer: e.target.checked }))} className="w-4 h-4 rounded" />
                     {t('admin.isOffer')}
                   </label>
+                </div>
+                <div className="md:col-span-2 flex justify-end">
+                  <button onClick={handleSaveNameDescription} className="bg-luxury-gold text-luxury-dark px-4 py-2 rounded-lg text-sm font-semibold hover:bg-opacity-90 transition">
+                    {t('admin.save')}
+                  </button>
                 </div>
               </div>
 
@@ -538,9 +584,9 @@ export default function AdminProducts() {
                 )}
               </div>
 
-              {/* Translations */}
+              {/* Translations (optional) */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('admin.translations')}</h3>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('admin.translations')} <span className="text-xs font-normal text-gray-400">({t('common.optional') ?? 'optional'})</span></h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('common.language')}</label>

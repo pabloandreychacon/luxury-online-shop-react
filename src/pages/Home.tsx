@@ -95,7 +95,7 @@ export default function Home() {
                 <Link
                   key={category.Id}
                   to={`/shop?category=${category.Name.toLowerCase()}`}
-                  className="group relative h-96 rounded-lg overflow-hidden cursor-pointer bg-luxury-charcoal dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-luxury-gold transition-all duration-300"
+                  className="group relative h-32 rounded-lg overflow-hidden cursor-pointer bg-luxury-charcoal dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-luxury-gold transition-all duration-300"
                 >
                   <div className="absolute inset-0 flex items-center justify-center p-6">
                     <h3 className="text-3xl font-luxury text-luxury-gold group-hover:scale-110 transition duration-300">
