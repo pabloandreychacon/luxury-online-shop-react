@@ -16,9 +16,17 @@ interface Category {
   Active: boolean;
 }
 
+interface Brand {
+  Id: string;
+  Name: string;
+  DisplayName: string;
+  BrandImage?: string;
+}
+
 export default function Home() {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -32,6 +40,13 @@ export default function Home() {
       .eq('IdBusiness', defaultSettings.id)
       .eq('Active', true);
     setCategories(categoriesData || []);
+
+    const { data: brandsData } = await supabase
+      .from('Brands')
+      .select('Id, Name, DisplayName, BrandImage')
+      .eq('IdBusiness', defaultSettings.id)
+      .eq('Active', true);
+    setBrands(brandsData || []);
 
     if (categoriesData) {
       const featuredProducts: Product[] = [];
@@ -85,6 +100,39 @@ export default function Home() {
       <div>
         <HeroCarousel />
 
+        {/* Brands Section */}
+        {brands.length > 0 && (
+          <section className="py-20 bg-gray-50 dark:bg-gray-800">
+            <div className="container-luxury">
+              <h2 className="section-title">{t('admin.brands')}</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {brands.map((brand) => (
+                  <Link
+                    key={brand.Id}
+                    to={`/shop?brand=${brand.Id}`}
+                    className="group relative h-36 rounded-lg overflow-hidden cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-luxury-gold transition-all duration-300"
+                  >
+                    {brand.BrandImage ? (
+                      <>
+                        <img src={brand.BrandImage} alt={brand.DisplayName}
+                          className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-300" />
+                        <div className="absolute inset-0 bg-luxury-dark/50" />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 bg-luxury-charcoal dark:bg-gray-800" />
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center p-4">
+                      <h3 className="text-xl font-luxury text-luxury-gold text-center group-hover:scale-110 transition duration-300">
+                        {brand.DisplayName || brand.Name}
+                      </h3>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Categories Section */}
         <section className="py-20 bg-white dark:bg-gray-900">
           <div className="container-luxury">
@@ -107,6 +155,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+
 
         {/* Products Section */}
         <section className="py-20 bg-white dark:bg-gray-900">

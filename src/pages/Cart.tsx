@@ -3,10 +3,13 @@ import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import { logger } from 'luna-components-library';
+import { useEffect } from 'react';
 
 export default function Cart() {
   const { t } = useTranslation();
   const { items, removeItem, updateQuantity, total, clearCart } = useCart();
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
 
   const taxAmount = items.reduce((sum, item) => {
     if (import.meta.env.DEV) {

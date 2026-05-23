@@ -41,6 +41,10 @@ export default function Checkout() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   const loadData = async () => {
     const settings = await getSettings();
     setPaypalClientId(settings.paypalClientId || '');

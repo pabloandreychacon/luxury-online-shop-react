@@ -18,12 +18,12 @@ export default function Shop() {
   const [selectedBrand, setSelectedBrand] = useState<number>(0);
 
   const category = searchParams.get('category');
+  const brandParam = searchParams.get('brand');
 
   useEffect(() => {
-    if (category) {
-      setSelectedCategory(category);
-    }
-  }, [category]);
+    if (category) setSelectedCategory(category);
+    if (brandParam) setSelectedBrand(parseInt(brandParam));
+  }, [category, brandParam]);
 
   useEffect(() => {
     loadData();
