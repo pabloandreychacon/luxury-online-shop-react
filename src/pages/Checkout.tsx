@@ -30,6 +30,7 @@ export default function Checkout() {
 
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [priceLists, setPriceLists] = useState<{ Id: number; Label: string }[]>([]);
+  const [orderNotes, setOrderNotes] = useState('');
 
   useEffect(() => {
     if (items.length === 0 && !showSuccessModal && !orderCompleted) {
@@ -80,6 +81,7 @@ export default function Checkout() {
         EstimatedDeliveryDate: estimatedDelivery.toISOString(),
         BuyerEmail: buyerEmail,
         BusinessEmail: businessEmail,
+        Notes: orderNotes || null,
         IdBusiness: defaultSettings.id,
         CreatedAt: new Date().toISOString(),
         UpdatedAt: new Date().toISOString()
@@ -119,7 +121,7 @@ export default function Checkout() {
       return `${name}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`;
     }).join('\n');
 
-    const orderSummary = `Order Number: ${orderNumber}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`;
+    const orderSummary = `Order Number: ${orderNumber}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}${orderNotes ? `\nNotes: ${orderNotes}` : ''}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`;
 
     const signature = `\n\n---\n${businessName}\n${businessEmail}\n${businessPhone}`;
 
@@ -190,6 +192,20 @@ export default function Checkout() {
               </div>
             </div>
 
+            {/* Order Notes */}
+            <div className="card-luxury p-6 rounded-lg">
+              <h2 className="font-luxury text-2xl mb-4">{t('orders.notes')}</h2>
+              <textarea
+                id="order-notes"
+                name="orderNotes"
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                placeholder={t('checkout.notesPlaceholder')}
+                rows={4}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-luxury-gold resize-none text-sm"
+              />
+            </div>
+
             {/* Shipping Methods */}
             <div className="card-luxury p-6 rounded-lg">
               <h2 className="font-luxury text-2xl mb-6">{t('checkout.shippingMethod')}</h2>
@@ -198,8 +214,8 @@ export default function Checkout() {
                   <label
                     key={method.Id}
                     className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition ${selectedShipping?.Id === method.Id
-                        ? 'border-luxury-gold bg-luxury-gold bg-opacity-10'
-                        : 'border-gray-300 dark:border-gray-700'
+                      ? 'border-luxury-gold bg-luxury-gold bg-opacity-10'
+                      : 'border-gray-300 dark:border-gray-700'
                       }`}
                   >
                     <div className="flex items-center gap-3">
@@ -220,6 +236,7 @@ export default function Checkout() {
                 ))}
               </div>
             </div>
+
           </div>
 
           {/* Order Summary */}

@@ -133,6 +133,7 @@ const resources = {
         days: 'days',
         orderCompleted: 'Order Completed!',
         orderPlaced: 'Your order #{orderNumber} has been successfully placed.',
+        notesPlaceholder: 'Add notes: description, color, size, special requests...',
       },
       wishlist: {
         title: 'Wishlist',
@@ -433,6 +434,7 @@ const resources = {
         days: '天',
         orderCompleted: '订单完成！',
         orderPlaced: '您的订单 #{orderNumber} 已成功提交。',
+        notesPlaceholder: '添加备注：描述、颜色、尺寸、特殊要求...',
       },
       wishlist: {
         title: '心愿单',
@@ -733,6 +735,7 @@ const resources = {
         days: 'días',
         orderCompleted: '¡Pedido Completado!',
         orderPlaced: 'Tu pedido #{orderNumber} ha sido realizado exitosamente.',
+        notesPlaceholder: 'Agrega notas: descripción, color, talla, solicitudes especiales...',
       },
       wishlist: {
         title: 'Lista de Deseos',
