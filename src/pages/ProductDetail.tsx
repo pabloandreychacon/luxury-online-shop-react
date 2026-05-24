@@ -503,7 +503,7 @@ export default function ProductDetail() {
                   </div>
                   <div className="p-4">
                     <h3 className="font-luxury text-lg text-gray-900 dark:text-gray-100 mb-2">
-                      {relProduct.name}
+                      {relProduct.name.length > 50 ? relProduct.name.substring(0, 50) + '…' : relProduct.name}
                     </h3>
                     <p className="text-2xl font-luxury text-luxury-gold">
                       ${relProduct.price.toFixed(2)}
