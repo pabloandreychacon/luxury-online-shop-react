@@ -48,7 +48,7 @@ export default function Cart() {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                          <h3 className="font-luxury text-base leading-tight">{item.name}</h3>
+                          <h3 className="font-luxury text-base leading-tight">{item.name.length > 50 ? item.name.substring(0, 50) + '…' : item.name}</h3>
                           <button
                             onClick={() => removeItem(item.id)}
                             className="text-red-500 hover:text-red-700 transition flex-shrink-0"

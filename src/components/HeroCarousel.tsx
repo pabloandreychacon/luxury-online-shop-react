@@ -202,8 +202,8 @@ const HeroCarousel = () => {
                   </span>
                 )}
 
-                <h1 className="text-5xl md:text-7xl font-luxury font-semibold leading-tight tracking-tight uppercase">
-                  {slide.Name}
+                  <h1 className="text-5xl md:text-7xl font-luxury font-semibold leading-tight tracking-tight uppercase">
+                  {slide.Name.length > 50 ? slide.Name.substring(0, 50) + '…' : slide.Name}
                 </h1>
 
                 <p className="text-4xl font-luxury text-luxury-gold">

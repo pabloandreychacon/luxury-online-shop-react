@@ -4,6 +4,7 @@ export interface Product {
   category: 'bag' | 'scarf' | 'watch' | string;
   price: number;
   image: string;
+  isVideo?: boolean;
   description: string;
   material: string;
   dimensions?: string;

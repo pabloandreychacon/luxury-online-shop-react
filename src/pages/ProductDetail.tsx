@@ -140,16 +140,16 @@ export default function ProductDetail() {
       const relatedProductIds = data.map((p) => p.Id);
       const { data: mediaData } = await supabase
         .from('ProductMedia')
-        .select('ProductId, MediaUrl, DisplayOrder')
+        .select('ProductId, MediaUrl, isVideo, DisplayOrder')
         .in('ProductId', relatedProductIds)
         .eq('IdBusiness', defaultSettings.id)
         .order('DisplayOrder', { ascending: true });
 
-      const mediaMap: Record<number, string> = {};
+      const mediaMap: Record<number, { MediaUrl: string; isVideo: boolean }> = {};
       if (mediaData) {
         mediaData.forEach((media) => {
           if (!mediaMap[media.ProductId]) {
-            mediaMap[media.ProductId] = media.MediaUrl;
+            mediaMap[media.ProductId] = { MediaUrl: media.MediaUrl, isVideo: media.isVideo };
           }
         });
       }
@@ -170,12 +170,14 @@ export default function ProductDetail() {
       const mapped: Product[] = data.map(p => {
         const trs = trMap[p.Id] || {};
         const tr = trs[i18n.language];
+        const media = mediaMap[p.Id];
         return {
           id: String(p.Id),
           name: tr?.Name || p.Name || '',
           category: categoryData?.Name?.toLowerCase() || '',
           price: p.Price,
-          image: mediaMap[p.Id] || p.ImageUrl,
+          image: media?.MediaUrl || p.ImageUrl,
+          isVideo: media?.isVideo || false,
           description: tr?.Description || p.Description || '',
           material: '',
           rating: 4.5,
@@ -265,7 +267,7 @@ export default function ProductDetail() {
             <span className="mx-2">/</span>
             <span className="capitalize">{product.category}</span>
             <span className="mx-2">/</span>
-            <span className="text-gray-900 dark:text-gray-100 font-semibold">{product.name}</span>
+            <span className="text-gray-900 dark:text-gray-100 font-semibold">{product.name.length > 50 ? product.name.substring(0, 50) + '…' : product.name}</span>
           </nav>
         </div>
       </div>
@@ -340,7 +342,7 @@ export default function ProductDetail() {
 
             {/* Product Name */}
             <h1 className="font-luxury text-4xl mb-1 text-gray-900 dark:text-gray-100">
-              {product.name}
+              {product.name.length > 50 ? product.name.substring(0, 50) + '…' : product.name}
             </h1>
 
             {/* Brand */}
@@ -482,11 +484,22 @@ export default function ProductDetail() {
                   className="group card-luxury rounded-lg overflow-hidden cursor-pointer"
                 >
                   <div className="relative h-64 bg-gray-200 dark:bg-gray-800 overflow-hidden">
-                    <img
-                      src={relProduct.image}
-                      alt={relProduct.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-                    />
+                    {relProduct.isVideo ? (
+                      <video
+                        src={relProduct.image}
+                        className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                      />
+                    ) : (
+                      <img
+                        src={relProduct.image}
+                        alt={relProduct.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                      />
+                    )}
                   </div>
                   <div className="p-4">
                     <h3 className="font-luxury text-lg text-gray-900 dark:text-gray-100 mb-2">

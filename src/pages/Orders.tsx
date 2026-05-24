@@ -243,7 +243,7 @@ export default function Orders() {
                         {orderItems[order.Id].map((item) => (
                           <div key={item.Id} className="flex justify-between items-center bg-gray-50 dark:bg-gray-700 p-3 rounded">
                             <div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">{item.ProductName}</p>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">{item.ProductName.length > 50 ? item.ProductName.substring(0, 50) + '…' : item.ProductName}</p>
                               <p className="text-xs text-gray-600 dark:text-gray-400">{t('orders.qty')}: {item.Quantity} × ${item.Price.toFixed(2)}</p>
                               {item.PriceListId ? (
                                 <p className="text-xs text-luxury-gold">

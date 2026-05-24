@@ -393,7 +393,7 @@ export default function AdminProducts() {
                 </td>
                 <td className="px-4 py-2 md:py-3 text-gray-900 dark:text-white font-medium flex justify-between md:table-cell">
                   <span className="text-xs text-gray-500 md:hidden">{t('common.name')}</span>
-                  {product.Name || '—'}
+                  {product.Name ? product.Name.length > 50 ? product.Name.substring(0, 50) + '…' : product.Name : '—'}
                 </td>
                 <td className="px-4 py-2 md:py-3 text-gray-600 dark:text-gray-400 flex justify-between md:table-cell">
                   <span className="text-xs text-gray-500 md:hidden">{t('product.category')}</span>
