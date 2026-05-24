@@ -13,7 +13,7 @@ import AdminBrands from '../components/AdminBrands';
 
 export default function Admin() {
   const { t } = useTranslation();
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(() => localStorage.getItem('admin_auth') === 'true');
   const [password, setPassword] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'settings' | 'products' | 'categories' | 'brands' | 'shipping' | 'orders'>('settings');
@@ -38,6 +38,7 @@ export default function Admin() {
 
     if (isValid) {
       setAuthenticated(true);
+      localStorage.setItem('admin_auth', 'true');
       setPassword('');
     } else {
       alert(t('auth.invalidPassword'));
@@ -146,7 +147,7 @@ export default function Admin() {
             {t('admin.panel')}
           </h1>
           <button
-            onClick={() => setAuthenticated(false)}
+            onClick={() => { setAuthenticated(false); localStorage.removeItem('admin_auth'); }}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
             {t('auth.logout')}
