@@ -63,11 +63,13 @@ export default function AdminProducts() {
   const [filterBrand, setFilterBrand] = useState(0);
 
   useEffect(() => {
-    loadProducts(); loadCategories(); loadBrands(); loadLanguageOptions(); loadPriceLists();
+    loadCategories(); loadBrands(); loadLanguageOptions(); loadPriceLists();
   }, []);
 
-  const loadProducts = async () => {
-    const { data } = await supabase.from('Products').select('*').eq('IdBusiness', defaultSettings.id);
+  const loadProducts = async (categoryId?: number) => {
+    let query = supabase.from('Products').select('*').eq('IdBusiness', defaultSettings.id);
+    if (categoryId) query = query.eq('CategoryId', categoryId);
+    const { data } = await query;
     if (!data) return;
 
     const ids = data.map(p => Number(p.Id));
@@ -84,12 +86,18 @@ export default function AdminProducts() {
   };
 
   const loadCategories = async () => {
-    const { data } = await supabase.from('Categories').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true);
-    setCategories(data || []);
+    const { data } = await supabase.from('Categories').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true).order('Name', { ascending: true });
+    const cats = data || [];
+    setCategories(cats);
+    if (cats.length > 0) {
+      const firstId = Number(cats[0].Id);
+      setFilterCategory(firstId);
+      loadProducts(firstId);
+    }
   };
 
   const loadBrands = async () => {
-    const { data } = await supabase.from('Brands').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true);
+    const { data } = await supabase.from('Brands').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true).order('Name', { ascending: true });
     setBrands(data || []);
   };
 
@@ -260,7 +268,6 @@ export default function AdminProducts() {
   const getBrandName = (id?: number) => brands.find(b => Number(b.Id) === id)?.DisplayName || brands.find(b => Number(b.Id) === id)?.Name || '-';
 
   const filteredProducts = products.filter(p => {
-    if (filterCategory && p.CategoryId !== filterCategory) return false;
     if (filterBrand && p.BrandId !== filterBrand) return false;
     return true;
   }).sort((a, b) => (a.Name || '').localeCompare(b.Name || ''));
@@ -316,20 +323,20 @@ export default function AdminProducts() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('admin.taxes')}</label>
               <input type="number" placeholder={t('admin.taxes')} value={newProduct.taxes}
-              onChange={(e) => setNewProduct({ ...newProduct, taxes: parseFloat(e.target.value) || 0 })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+                onChange={(e) => setNewProduct({ ...newProduct, taxes: parseFloat(e.target.value) || 0 })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('admin.weight')}</label>
               <input type="number" step="0.01" placeholder={t('admin.weight')} value={newProduct.weight}
-              onChange={(e) => setNewProduct({ ...newProduct, weight: parseFloat(e.target.value) || 0 })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
+                onChange={(e) => setNewProduct({ ...newProduct, weight: parseFloat(e.target.value) || 0 })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.description')}</label>
               <textarea placeholder={t('product.description')} value={newProduct.description}
-              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" rows={2} />
+                onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" rows={2} />
             </div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={newProduct.isOffer} onChange={(e) => setNewProduct({ ...newProduct, isOffer: e.target.checked })} className="w-4 h-4 rounded" />
@@ -346,9 +353,8 @@ export default function AdminProducts() {
       <div className="flex flex-wrap gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
         <div className="flex-1 min-w-40">
           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('shop.category')}</label>
-          <select value={filterCategory} onChange={(e) => setFilterCategory(parseInt(e.target.value))}
+          <select value={filterCategory} onChange={(e) => { const val = parseInt(e.target.value); setFilterCategory(val); loadProducts(val); }}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
-            <option value={0}>{t('shop.allProducts')}</option>
             {categories.map(c => <option key={c.Id} value={c.Id}>{c.DisplayName}</option>)}
           </select>
         </div>
