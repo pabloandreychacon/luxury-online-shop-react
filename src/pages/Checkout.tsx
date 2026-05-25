@@ -33,6 +33,7 @@ export default function Checkout() {
   const [priceLists, setPriceLists] = useState<{ Id: number; Label: string }[]>([]);
   const [orderNotes, setOrderNotes] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
   const [reportingProduct, setReportingProduct] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
 
@@ -331,26 +332,33 @@ export default function Checkout() {
                       });
                     }}
                     onApprove={async (data, actions) => {
-                      const details = await actions.order?.capture();
-                      const buyerName = `${details?.payer?.name?.given_name} ${details?.payer?.name?.surname}`;
-                      const buyerEmail = details?.payer?.email_address || '';
-                      const shippingAddress = details?.purchase_units?.[0]?.shipping?.address ?
-                        `${details.purchase_units[0].shipping.address.address_line_1}, ${details.purchase_units[0].shipping.address.admin_area_2}, ${details.purchase_units[0].shipping.address.admin_area_1} ${details.purchase_units[0].shipping.address.postal_code}` :
-                        'N/A';
+                      setProcessingPayment(true);
+                      try {
+                        const details = await actions.order?.capture();
+                        const buyerName = `${details?.payer?.name?.given_name} ${details?.payer?.name?.surname}`;
+                        const buyerEmail = details?.payer?.email_address || '';
+                        const shippingAddress = details?.purchase_units?.[0]?.shipping?.address ?
+                          `${details.purchase_units[0].shipping.address.address_line_1}, ${details.purchase_units[0].shipping.address.admin_area_2}, ${details.purchase_units[0].shipping.address.admin_area_1} ${details.purchase_units[0].shipping.address.postal_code}` :
+                          'N/A';
 
-                      const result = await saveOrder(data.orderID, buyerEmail, shippingAddress);
-                      const orderId = result?.orderId;
-                      const productNameMap = result?.productNameMap || {};
+                        const result = await saveOrder(data.orderID, buyerEmail, shippingAddress);
+                        const orderId = result?.orderId;
+                        const productNameMap = result?.productNameMap || {};
 
-                      if (orderId) {
-                        await sendOrderEmail(orderId, buyerName, buyerEmail, shippingAddress, productNameMap);
-                        setOrderNumber(orderId);
-                        setOrderCompleted(true);
-                        setShowSuccessModal(true);
-                        localStorage.removeItem('cart');
-                        clearCart();
+                        if (orderId) {
+                          await sendOrderEmail(orderId, buyerName, buyerEmail, shippingAddress, productNameMap);
+                          setOrderNumber(orderId);
+                          setOrderCompleted(true);
+                          setShowSuccessModal(true);
+                          localStorage.removeItem('cart');
+                          clearCart();
+                        }
+                      } finally {
+                        setProcessingPayment(false);
                       }
                     }}
+                    onCancel={() => setProcessingPayment(false)}
+                    onError={() => setProcessingPayment(false)}
                   />
                 </PayPalScriptProvider>
               )}
@@ -358,6 +366,17 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {/* Processing Overlay */}
+      {processingPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50" style={{ cursor: 'wait' }}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-sm mx-4 text-center">
+            <div className="w-12 h-12 border-4 border-luxury-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-900 dark:text-white font-semibold">Processing payment...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Please wait, do not close this page.</p>
+          </div>
+        </div>
+      )}
 
       {/* Report Modal */}
       {reportingProduct && (
