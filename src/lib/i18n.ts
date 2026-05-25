@@ -134,7 +134,7 @@ const resources = {
         orderCompleted: 'Order Completed!',
         orderPlaced: 'Your order #{orderNumber} has been successfully placed.',
         notesPlaceholder: 'Add notes: description, color, size, special requests...',
-        disclaimer: 'By paying, you accept that this transaction is carried out directly with the external seller through their PayPal account. The seller\'s PayPal processes payments and is responsible for the product, its quality and its handling.',
+        disclaimer: 'By paying, you accept that this transaction is carried out directly with the external seller through their PayPal account. The seller processes the payments and is solely responsible for the product, its originality, quality and handling. Our platform does not hold funds nor intervene in payment disputes.',
       },
       wishlist: {
         title: 'Wishlist',
@@ -437,7 +437,7 @@ const resources = {
         orderCompleted: '订单完成！',
         orderPlaced: '您的订单 #{orderNumber} 已成功提交。',
         notesPlaceholder: '添加备注：描述、颜色、尺寸、特殊要求...',
-        disclaimer: '通过支付，您接受此交易是通过外部卖家的PayPal账户直接进行的。卖家的PayPal处理付款并对产品、其质量及其处理负责。',
+        disclaimer: '通过支付，您接受此交易是通过外部卖家的PayPal账户直接进行的。卖家处理付款并对产品的原创性、质量及处理承担全部责任。我们的平台不保留资金，也不介入支付纠纷。',
       },
       wishlist: {
         title: '心愿单',
@@ -740,7 +740,7 @@ const resources = {
         orderCompleted: '¡Pedido Completado!',
         orderPlaced: 'Tu pedido #{orderNumber} ha sido realizado exitosamente.',
         notesPlaceholder: 'Agrega notas: descripción, color, talla, solicitudes especiales...',
-        disclaimer: 'Al pagar, aceptas que esta transacción se realiza directamente con el vendedor externo a través de su cuenta de PayPal. El PayPal del vendedor procesa los pagos y se responsabiliza del producto, su calidad y su manejo.',
+        disclaimer: 'Al pagar, aceptas que esta transacción se realiza directamente con el vendedor externo a través de su cuenta de PayPal. El vendedor procesa los pagos y es el único responsable del producto, su originalidad, calidad y manejo. Nuestra plataforma no retiene fondos ni interviene en disputas de pago.',
       },
       wishlist: {
         title: 'Lista de Deseos',
