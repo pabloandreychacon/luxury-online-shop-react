@@ -200,8 +200,15 @@ export default function ProductDetail() {
     );
   }
 
+  const displayMedia = mediaItems.length > 0
+    ? mediaItems
+    : product?.image
+      ? [{ MediaUrl: product.image, isVideo: false }]
+      : [];
+
   const handleAddToCart = () => {
-    addItem({ ...product, price: effectivePrice }, quantity, selectedPriceListId);
+    const displayImage = displayMedia[activeImageIndex]?.MediaUrl || product.image;
+    addItem({ ...product, price: effectivePrice, image: displayImage }, quantity, selectedPriceListId);
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 2000);
   };
@@ -240,13 +247,6 @@ export default function ProductDetail() {
     navigator.clipboard.writeText(window.location.href);
     alert('Link copied to clipboard!');
   };
-
-  // Use loaded media or fallback to main image
-  const displayMedia = mediaItems.length > 0
-    ? mediaItems
-    : product?.image
-      ? [{ MediaUrl: product.image, isVideo: false }]
-      : [];
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">

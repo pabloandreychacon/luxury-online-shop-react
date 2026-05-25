@@ -44,7 +44,7 @@ export default function Cart() {
                       {item.image?.match(/\.(mp4|webm|ogg)$/i) ? (
                         <video src={item.image} className="w-20 h-20 object-cover rounded flex-shrink-0" autoPlay muted loop playsInline />
                       ) : (
-                        <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded flex-shrink-0" />
+                        <img src={item.image} alt={item.name} referrerPolicy="no-referrer" className="w-20 h-20 object-cover rounded flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
