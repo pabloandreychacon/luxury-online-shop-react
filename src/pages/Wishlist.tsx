@@ -1,29 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useWishlist } from '../context/WishlistContext';
-import { useCart } from '../context/CartContext';
-import { Heart, ShoppingBag, ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+import { Heart, ArrowLeft } from 'lucide-react';
 
 export default function Wishlist() {
   const { t } = useTranslation();
   const { wishlistItems, removeFromWishlist } = useWishlist();
-  const { addItem } = useCart();
-  const [quantity, setQuantity] = useState<{ [key: string]: number }>({});
-
-  const handleAddToCart = (productId: string) => {
-    const product = wishlistItems.find(p => p.id === productId);
-    if (product) {
-      const qty = quantity[productId] || 1;
-      addItem(product, qty);
-      // Reset quantity after adding
-      setQuantity(prev => ({ ...prev, [productId]: 1 }));
-    }
-  };
-
-  const getQuantity = (productId: string) => {
-    return quantity[productId] || 1;
-  };
 
   if (wishlistItems.length === 0) {
     return (
@@ -139,28 +121,10 @@ export default function Wishlist() {
                 </span>
               </div>
 
-              {/* Add to Cart */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="1"
-                  value={getQuantity(product.id)}
-                  onChange={e => setQuantity(prev => ({ ...prev, [product.id]: Math.max(1, parseInt(e.target.value) || 1) }))}
-                  className="w-16 px-2 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-sm"
-                />
-                <button
-                  onClick={() => handleAddToCart(product.id)}
-                  className="flex-1 py-2 px-3 rounded flex items-center justify-center gap-2 transition bg-luxury-gold text-luxury-dark hover:bg-opacity-90 font-semibold"
-                >
-                  <ShoppingBag size={16} />
-                  {t('product.addToCart')}
-                </button>
-              </div>
-
-              {/* View Details Link */}
+              {/* View Product */}
               <Link
                 to={`/product/${product.id}`}
-                className="mt-3 block text-center text-sm text-luxury-gold hover:text-opacity-80 transition"
+                className="block w-full py-2 px-3 rounded text-center transition bg-luxury-gold text-luxury-dark hover:bg-opacity-90 font-semibold"
               >
                 {t('shop.viewDetails')} →
               </Link>
