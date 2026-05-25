@@ -5,6 +5,7 @@ import ProductCard from '../components/ProductCard';
 import type { Product } from '../lib/types';
 import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
+import { Preloader } from 'luna-components-library';
 
 export default function Shop() {
   const { t, i18n } = useTranslation();
@@ -16,6 +17,7 @@ export default function Shop() {
   const [brands, setBrands] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedBrand, setSelectedBrand] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
 
   const category = searchParams.get('category');
   const brandParam = searchParams.get('brand');
@@ -30,6 +32,7 @@ export default function Shop() {
   }, [i18n.language]);
 
   const loadData = async () => {
+    setLoading(true);
     // Load categories first
     const { data: categoriesData } = await supabase
       .from('Categories')
@@ -105,6 +108,7 @@ export default function Shop() {
       });
       setProducts(mappedProducts);
     }
+    setLoading(false);
   };
 
   const filteredProducts = useMemo(() => {
@@ -137,6 +141,8 @@ export default function Shop() {
 
     return filtered;
   }, [products, selectedCategory, selectedBrand, maxPrice, sortBy]);
+
+  if (loading) return <Preloader isLoading={loading} backgroundColor="#0f0f0f" accentColor="#d4af37" size={70} borderWidth={3} />;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">

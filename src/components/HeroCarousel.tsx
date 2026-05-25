@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getSettings, defaultSettings } from '../data/settings';
 import { supabase } from '../lib/supabase';
+import { Preloader } from 'luna-components-library';
 import heroImage from '../assets/img/main-luxe-hero.jpg';
 
 const isVideo = (url: string) => /\.mp4$/i.test(url);
@@ -132,13 +133,7 @@ const HeroCarousel = () => {
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  if (loading) {
-    return (
-      <section className="relative h-screen w-full flex items-center justify-center bg-luxury-dark text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-luxury-gold" />
-      </section>
-    );
-  }
+  if (loading) return <Preloader isLoading={loading} backgroundColor="#0f0f0f" accentColor="#d4af37" size={70} borderWidth={3} />;
 
   if (slides.length === 0) {
     return (
@@ -202,7 +197,7 @@ const HeroCarousel = () => {
                   </span>
                 )}
 
-                  <h1 className="text-5xl md:text-7xl font-luxury font-semibold leading-tight tracking-tight uppercase">
+                <h1 className="text-5xl md:text-7xl font-luxury font-semibold leading-tight tracking-tight uppercase">
                   {slide.Name.length > 50 ? slide.Name.substring(0, 50) + '…' : slide.Name}
                 </h1>
 

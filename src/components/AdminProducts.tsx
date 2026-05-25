@@ -142,7 +142,7 @@ export default function AdminProducts() {
     setEditingProduct(null);
     setProductMedia([]);
     setProductTranslations({});
-    loadProducts();
+    loadProducts(filterCategory);
   };
 
   const handleUpdateProduct = async (field: string, value: any) => {
