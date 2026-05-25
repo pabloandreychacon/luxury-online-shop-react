@@ -263,7 +263,7 @@ export default function AdminProducts() {
     if (filterCategory && p.CategoryId !== filterCategory) return false;
     if (filterBrand && p.BrandId !== filterBrand) return false;
     return true;
-  });
+  }).sort((a, b) => (a.Name || '').localeCompare(b.Name || ''));
 
   return (
     <div className="space-y-4">

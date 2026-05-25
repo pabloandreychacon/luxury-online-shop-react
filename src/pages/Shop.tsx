@@ -44,7 +44,7 @@ export default function Shop() {
       .select('Id, Name, DisplayName')
       .eq('IdBusiness', defaultSettings.id)
       .eq('Active', true);
-    setBrands(brandsData || []);
+    setBrands((brandsData || []).sort((a, b) => (a.DisplayName || a.Name || '').localeCompare(b.DisplayName || b.Name || '')));
 
     // Then load products
     const { data: productsData } = await supabase
@@ -123,12 +123,16 @@ export default function Shop() {
     filtered = filtered.filter(p => p.price <= maxPrice);
 
     // Sort
-    if (sortBy === 'price-low') {
+    if (sortBy === 'name') {
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'price-low') {
       filtered.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-high') {
       filtered.sort((a, b) => b.price - a.price);
     } else if (sortBy === 'rating') {
       filtered.sort((a, b) => b.rating - a.rating);
+    } else {
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     return filtered;
@@ -149,7 +153,7 @@ export default function Shop() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar - Filters */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+            <div className="sticky top-24 bg-gray-50 dark:bg-gray-800 p-6 rounded-lg max-h-[calc(100vh-8rem)] overflow-y-auto">
               <h3 className="font-luxury text-lg mb-6">{t('shop.filters')}</h3>
 
               {/* Category Filter */}
