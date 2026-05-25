@@ -8,6 +8,7 @@ import type { Product } from '../lib/types';
 import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
 import { useProductPriceLists } from '../hooks/useProductPriceLists';
+import { Preloader } from 'luna-components-library';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,7 @@ export default function ProductDetail() {
   const [showAdded, setShowAdded] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const [brandName, setBrandName] = useState('');
   const [mediaItems, setMediaItems] = useState<{ MediaUrl: string; isVideo: boolean }[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -91,6 +93,7 @@ export default function ProductDetail() {
 
       await loadRelatedProducts(productData.CategoryId, productData.Id);
     }
+    setLoading(false);
   };
 
   const loadProductMedia = async (productId: number, fallbackUrl?: string) => {
@@ -187,6 +190,8 @@ export default function ProductDetail() {
       setRelatedProducts(mapped);
     }
   };
+
+  if (loading) return <Preloader isLoading={loading} backgroundColor="#0f0f0f" accentColor="#d4af37" size={70} borderWidth={3} />;
 
   if (!product) {
     return (
