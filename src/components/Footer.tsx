@@ -111,6 +111,13 @@ export default function Footer() {
           </div>
         )}
 
+        {/* Terms of Service */}
+        <div className="border-t border-gray-800 pt-8 mb-8">
+          <p className="text-xs text-gray-500 leading-relaxed text-center max-w-4xl mx-auto">
+            {t('footer.termsOfService')}
+          </p>
+        </div>
+
         {/* Bottom */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
           <p>&copy; {currentYear} {businessName}. {t('footer.allRightsReserved')}</p>

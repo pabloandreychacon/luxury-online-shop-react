@@ -134,6 +134,7 @@ const resources = {
         orderCompleted: 'Order Completed!',
         orderPlaced: 'Your order #{orderNumber} has been successfully placed.',
         notesPlaceholder: 'Add notes: description, color, size, special requests...',
+        disclaimer: 'By paying, you accept that this transaction is carried out directly with the external seller through their PayPal account. The seller\'s PayPal processes payments and is responsible for the product, its quality and its handling.',
       },
       wishlist: {
         title: 'Wishlist',
@@ -286,6 +287,7 @@ const resources = {
         contact: 'Contact Us',
         allRightsReserved: 'All rights reserved.',
         description: 'Discover timeless elegance through our curated collection of luxury fashion.',
+        termsOfService: 'Our platform operates solely as a directory of third-party listings. Commercial transactions are conducted externally and directly between buyer and seller through the seller\'s payment gateway (PayPal). We do not process payments, we do not hold funds, and we assume no responsibility for disputes, fraud, or intellectual property violations arising from products listed by sellers.',
       },
       common: {
         loading: 'Loading...',
@@ -435,6 +437,7 @@ const resources = {
         orderCompleted: '订单完成！',
         orderPlaced: '您的订单 #{orderNumber} 已成功提交。',
         notesPlaceholder: '添加备注：描述、颜色、尺寸、特殊要求...',
+        disclaimer: '通过支付，您接受此交易是通过外部卖家的PayPal账户直接进行的。卖家的PayPal处理付款并对产品、其质量及其处理负责。',
       },
       wishlist: {
         title: '心愿单',
@@ -520,8 +523,8 @@ const resources = {
         orderStatusDelivered: '已送达',
         orderStatusCancelled: '已取消',
         filters: '筛选',
-        filterByEmail: '按邮筱筛选',
-        emailPlaceholder: '输入邮筱...',
+        filterByEmail: '按邮箱筛选',
+        emailPlaceholder: '输入邮箱...',
         filterByDate: '按日期筛选',
         deliveryDays: '配送天数',
         sendEmailTitle: '向客户发送邮件？',
@@ -587,6 +590,7 @@ const resources = {
         contact: '联系我们',
         allRightsReserved: '版权所有。',
         description: '通过我们精心策划的奢华时尚系列，探索永恒的优雅。',
+        termsOfService: '我们的平台仅作为第三方列表的目录运营。商业交易在买家和卖家之间通过卖方的支付网关（PayPal）直接进行。我们不处理付款，不保管资金，并且对卖家列出的产品引起的争议、欺诈或知识产权侵权不承担任何责任。',
       },
       common: {
         loading: '加载中...',
@@ -736,6 +740,7 @@ const resources = {
         orderCompleted: '¡Pedido Completado!',
         orderPlaced: 'Tu pedido #{orderNumber} ha sido realizado exitosamente.',
         notesPlaceholder: 'Agrega notas: descripción, color, talla, solicitudes especiales...',
+        disclaimer: 'Al pagar, aceptas que esta transacción se realiza directamente con el vendedor externo a través de su cuenta de PayPal. El PayPal del vendedor procesa los pagos y se responsabiliza del producto, su calidad y su manejo.',
       },
       wishlist: {
         title: 'Lista de Deseos',
@@ -884,6 +889,7 @@ const resources = {
         contact: 'Contáctanos',
         allRightsReserved: 'Todos los derechos reservados.',
         description: 'Descubre la elegancia atemporal a través de nuestra colección seleccionada de moda de lujo.',
+        termsOfService: 'Nuestra plataforma opera únicamente como un directorio de anuncios de terceros. Las transacciones comerciales se realizan de manera externa y directa entre el comprador y el vendedor a través de la pasarela de pago del vendedor (PayPal). No procesamos pagos, no custodiamos fondos y no asumimos responsabilidad alguna por disputas, fraudes o violaciones de propiedad intelectual originadas por los productos listados por el vendedor.',
       },
       common: {
         loading: 'Cargando...',

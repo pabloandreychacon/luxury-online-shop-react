@@ -25,12 +25,14 @@ export default function Checkout() {
   const [businessEmail, setBusinessEmail] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [businessPhone, setBusinessPhone] = useState('');
+  const [businessAddress, setBusinessAddress] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderNumber, setOrderNumber] = useState(0);
 
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [priceLists, setPriceLists] = useState<{ Id: number; Label: string }[]>([]);
   const [orderNotes, setOrderNotes] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     if (items.length === 0 && !showSuccessModal && !orderCompleted) {
@@ -52,6 +54,7 @@ export default function Checkout() {
     setBusinessEmail(settings.email);
     setBusinessName(settings.businessName);
     setBusinessPhone(settings.phone);
+    setBusinessAddress(settings.address);
 
     const [{ data: shippingData }, { data: priceListData }] = await Promise.all([
       supabase.from('ShippingMethods').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true),
@@ -264,7 +267,23 @@ export default function Checkout() {
                 <span className="font-luxury text-2xl text-luxury-gold">${grandTotal.toFixed(2)}</span>
               </div>
 
-              {paypalClientId && (
+              <label className="flex items-start gap-2 mb-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 flex-shrink-0"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  {t('checkout.disclaimer')}
+                </span>
+              </label>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mb-4 text-center leading-relaxed">
+                {businessEmail} &mdash; {businessPhone}<br />
+                {businessAddress}
+              </div>
+
+              {paypalClientId && acceptedTerms && (
                 <PayPalScriptProvider options={{ clientId: paypalClientId, currency: 'USD' }}>
                   <PayPalButtons
                     style={{ layout: 'vertical' }}
