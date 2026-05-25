@@ -44,7 +44,7 @@ export default function AddToCartModal({ isOpen, onClose, productName }: AddToCa
               {t('cart.addedToCartTitle')}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              {productName}
+              {productName.length > 50 ? productName.substring(0, 50) + '…' : productName}
             </p>
             
             <Link
