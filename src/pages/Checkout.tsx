@@ -213,9 +213,9 @@ export default function Checkout() {
                         <input
                           type="number"
                           min="1"
-                          max="10"
+                          max={item.maxSellAllowed || 10}
                           value={item.quantity}
-                          onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                          onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)))}
                           className="w-14 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center text-sm"
                         />
                         <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 flex-shrink-0">

@@ -85,7 +85,8 @@ export default function Home() {
             material: '',
             rating: 4.5,
             reviews: 0,
-            taxes: productData.Taxes || 0
+            taxes: productData.Taxes || 0,
+            maxSellAllowed: (category as any).MaxSellAllowed || 10
           });
         }
       }

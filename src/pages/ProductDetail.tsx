@@ -75,7 +75,8 @@ export default function ProductDetail() {
         material: '',
         rating: 4.5,
         reviews: 0,
-        brandId: productData.BrandId || 0
+        brandId: productData.BrandId || 0,
+        maxSellAllowed: (categoryData as any)?.MaxSellAllowed || 10
       };
 
       setProduct(mappedProduct);
@@ -415,14 +416,14 @@ export default function ProductDetail() {
                   <input
                     type="number"
                     min="1"
-                    max="10"
+                    max={product.maxSellAllowed || 10}
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
+                    onChange={(e) => setQuantity(Math.max(1, Math.min(product.maxSellAllowed || 10, parseInt(e.target.value) || 1)))}
                     className="w-20 px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-center"
                     disabled={false}
                   />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {t('product.maxPerOrder')}
+                    {t('product.maxPerOrder', { max: product.maxSellAllowed || 10 })}
                   </span>
                 </div>
               </div>

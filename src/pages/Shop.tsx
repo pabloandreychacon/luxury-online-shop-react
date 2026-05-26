@@ -103,7 +103,8 @@ export default function Shop() {
           rating: 4.5,
           reviews: 0,
           brandId: p.BrandId || 0,
-          brandName: brandMap[p.BrandId] || ''
+          brandName: brandMap[p.BrandId] || '',
+          maxSellAllowed: (cat as any)?.MaxSellAllowed || 10
         };
       });
       setProducts(mappedProducts);

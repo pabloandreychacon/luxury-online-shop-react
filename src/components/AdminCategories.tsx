@@ -12,12 +12,13 @@ interface Category {
   BusinessEmail: string;
   Active: boolean;
   IdBusiness: number;
+  MaxSellAllowed: number;
 }
 
 export default function AdminCategories() {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [newCategory, setNewCategory] = useState({ name: '', displayName: '', categoryId: 0 });
+  const [newCategory, setNewCategory] = useState({ name: '', displayName: '', categoryId: 0, maxSellAllowed: 0 });
 
   useEffect(() => {
     loadCategories();
@@ -40,10 +41,11 @@ export default function AdminCategories() {
       CategoryId: newCategory.categoryId,
       BusinessEmail: defaultSettings.email,
       Active: true,
-      IdBusiness: defaultSettings.id
+      IdBusiness: defaultSettings.id,
+      MaxSellAllowed: newCategory.maxSellAllowed
     }]);
 
-    setNewCategory({ name: '', displayName: '', categoryId: 0 });
+    setNewCategory({ name: '', displayName: '', categoryId: 0, maxSellAllowed: 0 });
     loadCategories();
   };
 
@@ -86,13 +88,18 @@ export default function AdminCategories() {
             onChange={(e) => setNewCategory({ ...newCategory, displayName: e.target.value })}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
           />
-          {/* <input
-            type="number"
-            placeholder={t('admin.categoryId')}
-            value={newCategory.categoryId}
-            onChange={(e) => setNewCategory({ ...newCategory, categoryId: parseInt(e.target.value) || 0 })}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
-          /> */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Max Sell Allowed
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={newCategory.maxSellAllowed}
+              onChange={(e) => setNewCategory({ ...newCategory, maxSellAllowed: Math.max(1, parseInt(e.target.value) || 1) })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
+            />
+          </div>
         </div>
         <button
           onClick={handleAddCategory}
@@ -130,16 +137,30 @@ export default function AdminCategories() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={category.Active}
-                  onChange={(e) => handleUpdateCategory(category.Id, 'Active', e.target.checked)}
-                  className="w-4 h-4 rounded"
-                />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('admin.active')}
-                </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Max Sell Allowed
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    defaultValue={category.MaxSellAllowed}
+                    onBlur={(e) => handleUpdateCategory(category.Id, 'MaxSellAllowed', Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-7">
+                  <input
+                    type="checkbox"
+                    checked={category.Active}
+                    onChange={(e) => handleUpdateCategory(category.Id, 'Active', e.target.checked)}
+                    className="w-4 h-4 rounded"
+                  />
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('admin.active')}
+                  </label>
+                </div>
               </div>
             </div>
             <button

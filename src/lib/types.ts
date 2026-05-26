@@ -13,6 +13,7 @@ export interface Product {
   taxes?: number;
   brandId?: number;
   brandName?: string;
+  maxSellAllowed?: number;
 }
 
 export interface CartItem extends Product {

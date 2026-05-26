@@ -122,8 +122,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           <input
             type="number"
             min="1"
+            max={product.maxSellAllowed || 10}
             value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            onChange={(e) => setQuantity(Math.min(product.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)))}
             className="w-16 px-2 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-sm"
           />
           <button
