@@ -23,7 +23,7 @@ export default function Shop() {
   const brandParam = searchParams.get('brand');
 
   useEffect(() => {
-    if (category) { setSelectedCategory(category); loadData(); }
+    if (category) { setSelectedCategory(category); loadData(undefined, brandParam ? parseInt(brandParam) : undefined); }
     if (brandParam) setSelectedBrand(parseInt(brandParam));
   }, [category, brandParam]);
 
@@ -31,7 +31,7 @@ export default function Shop() {
     loadData();
   }, [i18n.language]);
 
-  const loadData = async (categoryId?: number) => {
+  const loadData = async (categoryId?: number, brandId?: number) => {
     setLoading(true);
     // Load categories first
     const { data: categoriesData } = await supabase
@@ -59,7 +59,11 @@ export default function Shop() {
     let query = supabase.from('Products').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true);
     if (effectiveCategoryId) {
       query = query.eq('CategoryId', effectiveCategoryId);
-    } else {
+    }
+    if (brandId) {
+      query = query.eq('BrandId', brandId);
+    }
+    if (!effectiveCategoryId && !brandId) {
       query = query.order('Name', { ascending: true }).limit(100);
     }
     const { data: productsData } = await query;
@@ -178,7 +182,7 @@ export default function Shop() {
                 <select
                   className="w-full px-3 py-2 rounded text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
                   value={selectedCategory}
-                  onChange={(e) => { const val = e.target.value; if (val === '') { setSelectedCategory(''); loadData(0); } else { const cat = categories.find(c => c.Name.toLowerCase() === val); if (cat) { setSelectedCategory(val); loadData(Number(cat.Id)); } } }}
+                   onChange={(e) => { const val = e.target.value; if (val === '') { setSelectedCategory(''); loadData(0, selectedBrand || undefined); } else { const cat = categories.find(c => c.Name.toLowerCase() === val); if (cat) { setSelectedCategory(val); loadData(Number(cat.Id), selectedBrand || undefined); } } }}
                 >
                   <option value="">{t('shop.allProducts')}</option>
                   {categories.map(cat => (
@@ -193,7 +197,7 @@ export default function Shop() {
                 <select
                   className="w-full px-3 py-2 rounded text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
                   value={selectedBrand}
-                  onChange={(e) => setSelectedBrand(parseInt(e.target.value))}
+                  onChange={(e) => { const val = parseInt(e.target.value); setSelectedBrand(val); const catId = selectedCategory ? categories.find(c => c.Name.toLowerCase() === selectedCategory)?.Id : undefined; loadData(catId ? Number(catId) : undefined, val || undefined); }}
                 >
                   <option value={0}>{t('shop.allBrands')}</option>
                   {brands.map(brand => (
