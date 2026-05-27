@@ -22,7 +22,7 @@ export default function AdminBrands() {
   useEffect(() => { loadBrands(); }, []);
 
   const loadBrands = async () => {
-    const { data } = await supabase.from('Brands').select('*').eq('IdBusiness', defaultSettings.id);
+    const { data } = await supabase.from('Brands').select('*').eq('IdBusiness', defaultSettings.id).order('Name', { ascending: true });
     setBrands(data || []);
   };
 

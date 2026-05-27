@@ -28,7 +28,8 @@ export default function AdminCategories() {
     const { data } = await supabase
       .from('Categories')
       .select('*')
-      .eq('IdBusiness', defaultSettings.id);
+      .eq('IdBusiness', defaultSettings.id)
+      .order('Name', { ascending: true });
     setCategories(data || []);
   };
 
