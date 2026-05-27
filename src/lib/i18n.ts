@@ -243,6 +243,10 @@ const resources = {
         weight: 'Weight (kg)',
         actions: 'Actions',
         cancel: 'Cancel',
+        duplicateBrand: 'A brand with this Name or DisplayName already exists.',
+        duplicateCategory: 'A category with this Name or DisplayName already exists.',
+        duplicateShippingMethod: 'A shipping method with this Description already exists.',
+        duplicateProduct: 'A product with this Name already exists.',
       },
       contact: {
         title: 'Contact Us',
@@ -551,6 +555,10 @@ const resources = {
         weight: '重量 (kg)',
         actions: '操作',
         cancel: '取消',
+        duplicateBrand: '已存在相同 Name 或 DisplayName 的品牌。',
+        duplicateCategory: '已存在相同 Name 或 DisplayName 的类别。',
+        duplicateShippingMethod: '已存在相同 Description 的配送方式。',
+        duplicateProduct: '已存在相同 Name 的产品。',
       },
       contact: {
         title: '联系我们',
@@ -855,6 +863,10 @@ const resources = {
         weight: 'Peso (kg)',
         actions: 'Acciones',
         cancel: 'Cancelar',
+        duplicateBrand: 'Ya existe una marca con ese Nombre o Nombre para Mostrar.',
+        duplicateCategory: 'Ya existe una categoría con ese Nombre o Nombre para Mostrar.',
+        duplicateShippingMethod: 'Ya existe un método de envío con esa Descripción.',
+        duplicateProduct: 'Ya existe un producto con ese Nombre.',
       },
       contact: {
         title: 'Contáctanos',

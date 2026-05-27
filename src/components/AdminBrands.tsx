@@ -26,8 +26,18 @@ export default function AdminBrands() {
     setBrands(data || []);
   };
 
+  const isDuplicate = (name: string, displayName: string, excludeId?: string) => {
+    return brands.some(b =>
+      b.Id !== excludeId && (b.Name.toLowerCase() === name.toLowerCase() || b.DisplayName.toLowerCase() === displayName.toLowerCase())
+    );
+  };
+
   const handleAddBrand = async () => {
     if (!newBrand.name || !newBrand.displayName) return;
+    if (isDuplicate(newBrand.name, newBrand.displayName)) {
+      alert(t('admin.duplicateBrand'));
+      return;
+    }
     await supabase.from('Brands').insert([{
       Name: newBrand.name,
       DisplayName: newBrand.displayName,
@@ -39,6 +49,14 @@ export default function AdminBrands() {
   };
 
   const handleUpdateBrand = async (id: string, field: string, value: any) => {
+    const brand = brands.find(b => b.Id === id);
+    if (!brand) return;
+    const newName = field === 'Name' ? value : brand.Name;
+    const newDisplayName = field === 'DisplayName' ? value : brand.DisplayName;
+    if (isDuplicate(newName, newDisplayName, id)) {
+      alert(t('admin.duplicateBrand'));
+      return;
+    }
     await supabase.from('Brands').update({ [field]: value }).eq('Id', id);
     setBrands(prev => prev.map(b => b.Id === id ? { ...b, [field]: value } : b));
   };

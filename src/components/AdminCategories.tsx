@@ -33,8 +33,18 @@ export default function AdminCategories() {
     setCategories(data || []);
   };
 
+  const isDuplicate = (name: string, displayName: string, excludeId?: string) => {
+    return categories.some(c =>
+      c.Id !== excludeId && (c.Name.toLowerCase() === name.toLowerCase() || c.DisplayName.toLowerCase() === displayName.toLowerCase())
+    );
+  };
+
   const handleAddCategory = async () => {
     if (!newCategory.name || !newCategory.displayName) return;
+    if (isDuplicate(newCategory.name, newCategory.displayName)) {
+      alert(t('admin.duplicateCategory'));
+      return;
+    }
 
     await supabase.from('Categories').insert([{
       Name: newCategory.name,
@@ -51,6 +61,16 @@ export default function AdminCategories() {
   };
 
   const handleUpdateCategory = async (id: string, field: string, value: any) => {
+    const category = categories.find(c => c.Id === id);
+    if (!category) return;
+    const newName = field === 'Name' ? value : category.Name;
+    const newDisplayName = field === 'DisplayName' ? value : category.DisplayName;
+    if (isDuplicate(newName, newDisplayName, id)) {
+      alert(t('admin.duplicateCategory'));
+      loadCategories();
+      return;
+    }
+
     setCategories((prev) => prev.map((category) => (
       category.Id === id ? { ...category, [field]: value } : category
     )));

@@ -182,6 +182,10 @@ export default function AdminProducts() {
 
   const handleSaveNameDescription = async () => {
     if (!editingProduct) return;
+    if (isDuplicateName(editName, editingProduct.Id)) {
+      alert(t('admin.duplicateProduct'));
+      return;
+    }
     await supabase.from('Products').update({
       Name: editName,
       Description: editDescription,
@@ -229,10 +233,18 @@ export default function AdminProducts() {
       Name: current.Name, Description: current.Description || null,
     }], { onConflict: 'ProductId,Language' });
     if (translationLang === 'en' && current.Name) {
+      if (isDuplicateName(current.Name, editingProduct.Id)) {
+        alert(t('admin.duplicateProduct'));
+        return;
+      }
       await supabase.from('Products').update({ Name: current.Name }).eq('Id', editingProduct.Id);
       setProducts(prev => prev.map(p => p.Id === editingProduct.Id ? { ...p, Name: current.Name } : p));
     }
     alert(t('admin.save') + ' ✓');
+  };
+
+  const isDuplicateName = (name: string, excludeId?: string) => {
+    return products.some(p => p.Id !== excludeId && p.Name?.toLowerCase() === name.toLowerCase());
   };
 
   const handleAddProduct = async () => {
@@ -243,6 +255,10 @@ export default function AdminProducts() {
     if (!newProduct.brandId) newErrors.brand = t('admin.required');
     setErrors(newErrors);
     if (Object.values(newErrors).some(Boolean)) return;
+    if (isDuplicateName(newProduct.name)) {
+      alert(t('admin.duplicateProduct'));
+      return;
+    }
 
     const { data: inserted } = await supabase.from('Products').insert([{
       Name: newProduct.name,

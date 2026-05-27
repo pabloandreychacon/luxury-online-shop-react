@@ -32,8 +32,16 @@ export default function AdminShippingMethods() {
     setShippingMethods(data || []);
   };
 
+  const isDuplicate = (description: string, excludeId?: string) => {
+    return shippingMethods.some(m => m.Id !== excludeId && m.Description.toLowerCase() === description.toLowerCase());
+  };
+
   const handleAddMethod = async () => {
     if (!newMethod.description || newMethod.price <= 0) return;
+    if (isDuplicate(newMethod.description)) {
+      alert(t('admin.duplicateShippingMethod'));
+      return;
+    }
     
     await supabase.from('ShippingMethods').insert([{
       Description: newMethod.description,
@@ -50,6 +58,11 @@ export default function AdminShippingMethods() {
   };
 
   const handleUpdateMethod = async (id: string, field: string, value: any) => {
+    if (field === 'Description' && isDuplicate(value, id)) {
+      alert(t('admin.duplicateShippingMethod'));
+      loadShippingMethods();
+      return;
+    }
     await supabase.from('ShippingMethods').update({ [field]: value }).eq('Id', id);
     loadShippingMethods();
   };
