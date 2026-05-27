@@ -69,6 +69,9 @@ const resources = {
         fastShippingDesc: 'Discreet packaging and worldwide delivery in 2-5 business days.',
         secureCheckout: 'Secure Checkout',
         secureCheckoutDesc: 'Protected transactions with encrypted payment processing.',
+        bannerLine1: '🍭Which style do you like? Please contact me.',
+        bannerLine2: '🍭Factory real shot pictures, you have a favorite style to send me pictures.',
+        bannerLine3: '🍭Product categories below',
       },
       shop: {
         title: 'Our Collection',
@@ -374,6 +377,9 @@ const resources = {
         fastShippingDesc: '隐私包装，全球2-5个工作日送达。',
         secureCheckout: '安全结账',
         secureCheckoutDesc: '加密支付处理，交易有保障。',
+        bannerLine1: '🍭你喜欢哪种风格？请联系我。',
+        bannerLine2: '🍭工厂实拍图片，有你喜欢的款式请发图片给我。',
+        bannerLine3: '🍭商品分类如下',
       },
       shop: {
         title: '我们的系列',
@@ -679,6 +685,9 @@ const resources = {
         fastShippingDesc: 'Embalaje discreto y entrega mundial en 2-5 días hábiles.',
         secureCheckout: 'Pago Seguro',
         secureCheckoutDesc: 'Transacciones protegidas con procesamiento de pagos encriptado.',
+        bannerLine1: '🍭¿Qué estilo te gusta? Por favor contáctame.',
+        bannerLine2: '🍭Fotos reales de fábrica, si tienes un estilo favorito envíame fotos.',
+        bannerLine3: '🍭Clasificación de productos a continuación',
       },
       shop: {
         title: 'Nuestra Colección',

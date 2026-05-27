@@ -102,6 +102,17 @@ export default function Home() {
       <div>
         <HeroCarousel />
 
+        {/* Info Banner */}
+        <div className="bg-gradient-to-r from-luxury-dark via-gray-900 to-luxury-dark border-y border-luxury-gold/20">
+          <div className="container-luxury py-6">
+            <div className="space-y-2 text-center text-sm md:text-base text-gray-300 leading-relaxed">
+              <p>{t('home.bannerLine1')}</p>
+              <p>{t('home.bannerLine2')}</p>
+              <p>{t('home.bannerLine3')}</p>
+            </div>
+          </div>
+        </div>
+
         {/* Brands Section */}
         {brands.length > 0 && (
           <section className="py-20 bg-gray-50 dark:bg-gray-800">

@@ -137,7 +137,7 @@ const HeroCarousel = () => {
 
   if (slides.length === 0) {
     return (
-      <section className="relative h-screen bg-luxury-dark text-white flex items-center justify-center overflow-hidden">
+      <section className="relative h-[calc(100vh-4rem)] bg-luxury-dark text-white flex items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 opacity-30 bg-cover bg-center animate-zoom"
           style={{ backgroundImage: `url(${heroImage})` }}
@@ -158,7 +158,7 @@ const HeroCarousel = () => {
   }
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-black text-white">
+    <section className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-black text-white">
       {slides.map((slide, index) => (
         <div
           key={slide.Id}
@@ -197,7 +197,7 @@ const HeroCarousel = () => {
                   </span>
                 )}
 
-                <h1 className="text-5xl md:text-7xl font-luxury font-semibold leading-tight tracking-tight uppercase">
+                <h1 className="text-3xl md:text-5xl font-luxury font-semibold leading-tight tracking-tight uppercase">
                   {slide.Name.length > 50 ? slide.Name.substring(0, 50) + '…' : slide.Name}
                 </h1>
 
@@ -206,7 +206,7 @@ const HeroCarousel = () => {
                 </p>
 
                 <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-xl leading-relaxed line-clamp-4">
-                  {slide.Description}
+                  {slide.Description.length > 50 ? slide.Description.substring(0, 50) + '…' : slide.Description}
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-4 justify-center lg:justify-start">
