@@ -57,7 +57,7 @@ export default function Cart() {
                           </button>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.material}</p>
-                        <p className="font-luxury text-luxury-gold mt-1">${item.price.toFixed(2)}</p>
+                        <p className="font-luxury text-luxury-gold mt-1">${item.price.toFixed(2)}{item.weight ? ` · ${(item.weight * item.quantity).toFixed(2)} kg` : ''}</p>
                         <div className="flex items-center justify-between mt-2">
                           <input
                             type="number"

@@ -62,17 +62,17 @@ export default function Footer() {
           <div>
             <h4 className="font-luxury text-lg mb-4 text-gray-100">{t('footer.contact')}</h4>
             <ul className="space-y-3 text-sm text-gray-400">
-              <li className="flex items-center space-x-2">
-                <Mail size={16} className="text-luxury-gold" />
-                <a href={`mailto:${email}`} className="hover:text-luxury-gold transition">{email}</a>
+              <li className="flex items-start space-x-2">
+                <Mail size={16} className="text-luxury-gold mt-0.5 shrink-0" />
+                <a href={`mailto:${email}`} className="hover:text-luxury-gold transition break-all">{email}</a>
               </li>
-              <li className="flex items-center space-x-2">
-                <Phone size={16} className="text-luxury-gold" />
-                <a href={`tel:${phone.replace(/\s/g, '')}`} className="hover:text-luxury-gold transition">{phone}</a>
+              <li className="flex items-start space-x-2">
+                <Phone size={16} className="text-luxury-gold mt-0.5 shrink-0" />
+                <a href={`tel:${phone.replace(/\s/g, '')}`} className="hover:text-luxury-gold transition break-all">{phone}</a>
               </li>
-              <li className="flex items-center space-x-2">
-                <MapPin size={16} className="text-luxury-gold" />
-                <span>{address}</span>
+              <li className="flex items-start space-x-2">
+                <MapPin size={16} className="text-luxury-gold mt-0.5 shrink-0" />
+                <span className="break-all">{address}</span>
               </li>
             </ul>
           </div>

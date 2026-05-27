@@ -213,7 +213,7 @@ export default function Checkout() {
                           Report
                         </button>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">${item.price.toFixed(2)}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">${item.price.toFixed(2)}{item.weight ? ` · ${(item.weight * item.quantity).toFixed(2)} kg` : ''}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <input
                           type="number"
@@ -251,6 +251,8 @@ export default function Checkout() {
             <div className="card-luxury p-6 rounded-lg">
               <h2 className="font-luxury text-2xl mb-6">{t('checkout.shippingLabel')}</h2>
               <select
+                id="shipping-method"
+                name="shipping-method"
                 value={selectedShipping?.Id || ''}
                 onChange={(e) => {
                   const id = parseInt(e.target.value);
@@ -267,7 +269,7 @@ export default function Checkout() {
                 <option value="">-- Select Shipping Method --</option>
                 {shippingMethods.map(method => (
                   <option key={method.Id} value={method.Id}>
-                    {method.Description} - {method.DeliveryDays} {t('checkout.days')} - ${method.Price.toFixed(2)}
+                    {method.Description} - {method.DeliveryDays} {t('checkout.days')} - ${method.Price.toFixed(2)}{method.MaxWeightAllowed ? ` (max ${method.MaxWeightAllowed} kg)` : ''}
                   </option>
                 ))}
               </select>

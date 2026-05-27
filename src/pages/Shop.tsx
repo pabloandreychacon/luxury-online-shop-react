@@ -50,16 +50,17 @@ export default function Shop() {
       .eq('Active', true);
     setBrands((brandsData || []).sort((a, b) => (a.DisplayName || a.Name || '').localeCompare(b.DisplayName || b.Name || '')));
 
-    // Auto-select first category if no filter params
-    const effectiveCategoryId = categoryId || (!category && !brandParam && cats.length > 0 ? Number(cats[0].Id) : undefined);
-    if (!category && !brandParam && cats.length > 0 && !categoryId) {
-      setSelectedCategory(cats[0].Name.toLowerCase());
+    const effectiveCategoryId = categoryId !== undefined ? categoryId : undefined;
+    if (!category && !brandParam && categoryId === undefined) {
+      setSelectedCategory('');
     }
 
     // Then load products
     let query = supabase.from('Products').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true);
     if (effectiveCategoryId) {
       query = query.eq('CategoryId', effectiveCategoryId);
+    } else {
+      query = query.order('Name', { ascending: true }).limit(100);
     }
     const { data: productsData } = await query;
 
@@ -174,48 +175,31 @@ export default function Shop() {
               {/* Category Filter */}
               <div className="mb-8">
                 <label className="block text-sm font-semibold mb-4">{t('shop.category')}</label>
-                <div className="space-y-2">
+                <select
+                  className="w-full px-3 py-2 rounded text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  value={selectedCategory}
+                  onChange={(e) => { const val = e.target.value; if (val === '') { setSelectedCategory(''); loadData(0); } else { const cat = categories.find(c => c.Name.toLowerCase() === val); if (cat) { setSelectedCategory(val); loadData(Number(cat.Id)); } } }}
+                >
+                  <option value="">{t('shop.allProducts')}</option>
                   {categories.map(cat => (
-                    <button
-                      key={cat.Id}
-                      onClick={() => { setSelectedCategory(cat.Name.toLowerCase()); loadData(Number(cat.Id)); }}
-                      className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedCategory === cat.Name.toLowerCase()
-                        ? 'bg-luxury-gold text-luxury-dark font-semibold'
-                        : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                        }`}
-                    >
-                      {cat.DisplayName}
-                    </button>
+                    <option key={cat.Id} value={cat.Name.toLowerCase()}>{cat.DisplayName}</option>
                   ))}
-                </div>
+                </select>
               </div>
 
               {/* Brand Filter */}
               <div className="mb-8">
                 <label className="block text-sm font-semibold mb-4">{t('product.brand')}</label>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setSelectedBrand(0)}
-                    className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedBrand === 0
-                      ? 'bg-luxury-gold text-luxury-dark font-semibold'
-                      : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                      }`}
-                  >
-                    {t('shop.allBrands')}
-                  </button>
+                <select
+                  className="w-full px-3 py-2 rounded text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  value={selectedBrand}
+                  onChange={(e) => setSelectedBrand(parseInt(e.target.value))}
+                >
+                  <option value={0}>{t('shop.allBrands')}</option>
                   {brands.map(brand => (
-                    <button
-                      key={brand.Id}
-                      onClick={() => setSelectedBrand(brand.Id)}
-                      className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedBrand === brand.Id
-                        ? 'bg-luxury-gold text-luxury-dark font-semibold'
-                        : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                        }`}
-                    >
-                      {brand.DisplayName || brand.Name}
-                    </button>
+                    <option key={brand.Id} value={brand.Id}>{brand.DisplayName || brand.Name}</option>
                   ))}
-                </div>
+                </select>
               </div>
 
               {/* Price Range */}

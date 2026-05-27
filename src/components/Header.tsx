@@ -55,8 +55,8 @@ export default function Header() {
       <div className="container-luxury py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0">
-            <h1 className="text-2xl font-luxury text-luxury-gold">{businessName}</h1>
+          <Link to="/" className="flex-shrink-0 min-w-0">
+            <h1 className="text-lg md:text-2xl font-luxury text-luxury-gold truncate">{businessName}</h1>
           </Link>
 
           {/* Desktop Navigation */}
