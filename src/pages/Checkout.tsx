@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, AlertTriangle } from 'lucide-react';
+import { logger } from 'luna-components-library';
 import { supabase } from '../lib/supabase';
 import { defaultSettings, getSettings } from '../data/settings';
 import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
@@ -13,6 +14,7 @@ interface ShippingMethod {
   Price: number;
   DeliveryDays: number;
   Active: boolean;
+  MaxWeightAllowed: number;
 }
 
 export default function Checkout() {
@@ -21,6 +23,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
+  const [shippingError, setShippingError] = useState(false);
   const [paypalClientId, setPaypalClientId] = useState('');
   const [businessEmail, setBusinessEmail] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -87,7 +90,6 @@ export default function Checkout() {
 
     if (shippingData && shippingData.length > 0) {
       setShippingMethods(shippingData);
-      setSelectedShipping(shippingData[0]);
     }
     setPriceLists(priceListData || []);
   };
@@ -175,6 +177,9 @@ export default function Checkout() {
     return sum + itemTax;
   }, 0);
 
+  const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0) * item.quantity, 0);
+  logger.info('Weight check:', { totalWeight, items: items.map(i => ({ id: i.id, weight: i.weight, qty: i.quantity })), selectedShipping: selectedShipping ? { Id: selectedShipping.Id, MaxWeightAllowed: selectedShipping.MaxWeightAllowed } : null });
+
   const shippingCost = selectedShipping?.Price || 0;
   const grandTotal = total + taxAmount + shippingCost;
 
@@ -191,7 +196,7 @@ export default function Checkout() {
               <h2 className="font-luxury text-2xl mb-6">{t('checkout.yourItems')}</h2>
               <div className="space-y-4">
                 {items.map(item => (
-                  <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                  <div key={`${item.id}-${item.priceListId || 0}`} className="flex gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0">
                     {item.image?.match(/\.(mp4|webm|ogg)$/i) ? (
                       <video src={item.image} className="w-16 h-16 object-cover rounded flex-shrink-0" autoPlay muted loop playsInline />
                     ) : (
@@ -215,10 +220,10 @@ export default function Checkout() {
                           min="1"
                           max={item.maxSellAllowed || 10}
                           value={item.quantity}
-                          onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)))}
+                          onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)), item.priceListId)}
                           className="w-14 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center text-sm"
                         />
-                        <button onClick={() => removeItem(item.id)} className="text-red-500 hover:text-red-700 flex-shrink-0">
+                        <button onClick={() => removeItem(item.id, item.priceListId)} className="text-red-500 hover:text-red-700 flex-shrink-0">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -244,33 +249,36 @@ export default function Checkout() {
 
             {/* Shipping Methods */}
             <div className="card-luxury p-6 rounded-lg">
-              <h2 className="font-luxury text-2xl mb-6">{t('checkout.shippingMethod')}</h2>
-              <div className="space-y-3">
+              <h2 className="font-luxury text-2xl mb-6">{t('checkout.shippingLabel')}</h2>
+              <select
+                value={selectedShipping?.Id || ''}
+                onChange={(e) => {
+                  const id = parseInt(e.target.value);
+                  const method = shippingMethods.find(m => m.Id === id) || null;
+                  setSelectedShipping(method);
+                  if (!method && acceptedTerms) setShippingError(true);
+                  else setShippingError(false);
+                  if (method && method.MaxWeightAllowed > 0 && totalWeight > method.MaxWeightAllowed) {
+                    logger.info('Weight exceeded:', { totalWeight, MaxWeightAllowed: method.MaxWeightAllowed, methodId: method.Id });
+                  }
+                }}
+                className={`w-full px-4 py-3 border rounded-lg text-sm focus:outline-none focus:border-luxury-gold bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${shippingError ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+              >
+                <option value="">-- Select Shipping Method --</option>
                 {shippingMethods.map(method => (
-                  <label
-                    key={method.Id}
-                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition ${selectedShipping?.Id === method.Id
-                      ? 'border-luxury-gold bg-luxury-gold bg-opacity-10'
-                      : 'border-gray-300 dark:border-gray-700'
-                      }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="shipping"
-                        checked={selectedShipping?.Id === method.Id}
-                        onChange={() => setSelectedShipping(method)}
-                        className="w-4 h-4"
-                      />
-                      <div>
-                        <span className="font-medium">{method.Description}</span>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{method.DeliveryDays} {t('checkout.days')}</p>
-                      </div>
-                    </div>
-                    <span className="font-semibold">${method.Price.toFixed(2)}</span>
-                  </label>
+                  <option key={method.Id} value={method.Id}>
+                    {method.Description} - {method.DeliveryDays} {t('checkout.days')} - ${method.Price.toFixed(2)}
+                  </option>
                 ))}
-              </div>
+              </select>
+              {shippingError && (
+                <p className="text-red-500 text-xs mt-2">Please select a shipping method.</p>
+              )}
+              {selectedShipping && selectedShipping.MaxWeightAllowed > 0 && totalWeight > selectedShipping.MaxWeightAllowed && (
+                <p className="text-red-500 text-xs mt-2">
+                  The total weight of your items ({totalWeight.toFixed(2)}) exceeds the max weight allowed ({selectedShipping.MaxWeightAllowed}) for this shipping method.
+                </p>
+              )}
             </div>
 
           </div>
@@ -304,7 +312,7 @@ export default function Checkout() {
                 <input
                   type="checkbox"
                   checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  onChange={(e) => { setAcceptedTerms(e.target.checked); if (e.target.checked && (!selectedShipping || (selectedShipping.MaxWeightAllowed > 0 && totalWeight > selectedShipping.MaxWeightAllowed))) setShippingError(true); }}
                   className="mt-1 w-4 h-4 flex-shrink-0"
                 />
                 <span className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -316,7 +324,10 @@ export default function Checkout() {
                 {businessAddress}
               </div>
 
-              {paypalClientId && acceptedTerms && (
+              {shippingError && (
+                <p className="text-red-500 text-xs mb-4 text-center">Please select a shipping method before paying.</p>
+              )}
+              {paypalClientId && acceptedTerms && selectedShipping && (!selectedShipping.MaxWeightAllowed || selectedShipping.MaxWeightAllowed <= 0 || totalWeight <= selectedShipping.MaxWeightAllowed) && (
                 <PayPalScriptProvider options={{ clientId: paypalClientId, currency: 'USD' }}>
                   <PayPalButtons
                     style={{ layout: 'vertical' }}

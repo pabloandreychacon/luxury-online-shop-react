@@ -23,7 +23,7 @@ export default function Shop() {
   const brandParam = searchParams.get('brand');
 
   useEffect(() => {
-    if (category) setSelectedCategory(category);
+    if (category) { setSelectedCategory(category); loadData(); }
     if (brandParam) setSelectedBrand(parseInt(brandParam));
   }, [category, brandParam]);
 
@@ -31,7 +31,7 @@ export default function Shop() {
     loadData();
   }, [i18n.language]);
 
-  const loadData = async () => {
+  const loadData = async (categoryId?: number) => {
     setLoading(true);
     // Load categories first
     const { data: categoriesData } = await supabase
@@ -40,7 +40,8 @@ export default function Shop() {
       .eq('IdBusiness', defaultSettings.id)
       .eq('Active', true);
 
-    setCategories(categoriesData || []);
+    const cats = (categoriesData || []).sort((a, b) => (a.DisplayName || a.Name || '').localeCompare(b.DisplayName || b.Name || ''));
+    setCategories(cats);
 
     const { data: brandsData } = await supabase
       .from('Brands')
@@ -49,14 +50,20 @@ export default function Shop() {
       .eq('Active', true);
     setBrands((brandsData || []).sort((a, b) => (a.DisplayName || a.Name || '').localeCompare(b.DisplayName || b.Name || '')));
 
-    // Then load products
-    const { data: productsData } = await supabase
-      .from('Products')
-      .select('*')
-      .eq('IdBusiness', defaultSettings.id)
-      .eq('Active', true)
+    // Auto-select first category if no filter params
+    const effectiveCategoryId = categoryId || (!category && !brandParam && cats.length > 0 ? Number(cats[0].Id) : undefined);
+    if (!category && !brandParam && cats.length > 0 && !categoryId) {
+      setSelectedCategory(cats[0].Name.toLowerCase());
+    }
 
-    if (productsData && categoriesData) {
+    // Then load products
+    let query = supabase.from('Products').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true);
+    if (effectiveCategoryId) {
+      query = query.eq('CategoryId', effectiveCategoryId);
+    }
+    const { data: productsData } = await query;
+
+    if (productsData && cats) {
       const productIds = productsData.map((p) => p.Id);
       const { data: translationsData } = await supabase
         .from('ProductTranslations')
@@ -104,7 +111,8 @@ export default function Shop() {
           reviews: 0,
           brandId: p.BrandId || 0,
           brandName: brandMap[p.BrandId] || '',
-          maxSellAllowed: (cat as any)?.MaxSellAllowed || 10
+          maxSellAllowed: (cat as any)?.MaxSellAllowed || 10,
+          weight: (p as any)?.Weight || 0
         };
       });
       setProducts(mappedProducts);
@@ -167,19 +175,10 @@ export default function Shop() {
               <div className="mb-8">
                 <label className="block text-sm font-semibold mb-4">{t('shop.category')}</label>
                 <div className="space-y-2">
-                  <button
-                    onClick={() => setSelectedCategory('')}
-                    className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedCategory === ''
-                      ? 'bg-luxury-gold text-luxury-dark font-semibold'
-                      : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                      }`}
-                  >
-                    {t('shop.allProducts')}
-                  </button>
                   {categories.map(cat => (
                     <button
                       key={cat.Id}
-                      onClick={() => setSelectedCategory(cat.Name.toLowerCase())}
+                      onClick={() => { setSelectedCategory(cat.Name.toLowerCase()); loadData(Number(cat.Id)); }}
                       className={`w-full text-left px-3 py-2 rounded text-sm transition ${selectedCategory === cat.Name.toLowerCase()
                         ? 'bg-luxury-gold text-luxury-dark font-semibold'
                         : 'hover:bg-gray-200 dark:hover:bg-gray-700'

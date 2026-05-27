@@ -129,6 +129,7 @@ const resources = {
       checkout: {
         yourItems: 'Your Items',
         shippingMethod: 'Shipping Method',
+        shippingLabel: 'Ship to',
         orderSummary: 'Order Summary',
         days: 'days',
         orderCompleted: 'Order Completed!',
@@ -224,6 +225,7 @@ const resources = {
         emailPlaceholder: 'Enter email...',
         filterByDate: 'Filter by Date',
         deliveryDays: 'Delivery Days',
+        maxWeightAllowed: 'Max Weight Allowed',
         sendEmailTitle: 'Send Email to Customer?',
         sendEmailDesc: 'Do you want to notify the customer at {{email}} with the updated order details?',
         saveOnly: 'Save Only',
@@ -432,6 +434,7 @@ const resources = {
       checkout: {
         yourItems: '您的商品',
         shippingMethod: '配送方式',
+        shippingLabel: '运送至',
         orderSummary: '订单摘要',
         days: '天',
         orderCompleted: '订单完成！',
@@ -527,6 +530,7 @@ const resources = {
         emailPlaceholder: '输入邮箱...',
         filterByDate: '按日期筛选',
         deliveryDays: '配送天数',
+        maxWeightAllowed: '最大允许重量',
         sendEmailTitle: '向客户发送邮件？',
         sendEmailDesc: '是否要将更新的订单详情通知 {{email}} 的客户？',
         saveOnly: '仅保存',
@@ -735,6 +739,7 @@ const resources = {
       checkout: {
         yourItems: 'Tus Artículos',
         shippingMethod: 'Método de Envío',
+        shippingLabel: 'Enviar a',
         orderSummary: 'Resumen del Pedido',
         days: 'días',
         orderCompleted: '¡Pedido Completado!',
@@ -826,6 +831,7 @@ const resources = {
         emailPlaceholder: 'Ingresar correo...',
         filterByDate: 'Filtrar por Fecha',
         deliveryDays: 'Días de Entrega',
+        maxWeightAllowed: 'Peso Máximo Permitido',
         sendEmailTitle: '¿Enviar correo al cliente?',
         sendEmailDesc: '¿Deseas notificar al cliente en {{email}} con los detalles actualizados del pedido?',
         saveOnly: 'Solo Guardar',

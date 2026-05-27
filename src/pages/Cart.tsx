@@ -39,7 +39,7 @@ export default function Cart() {
             <div className="lg:col-span-2">
               <div className="space-y-6">
                 {items.map(item => (
-                  <div key={item.id} className="card-luxury p-4 rounded-lg">
+                  <div key={`${item.id}-${item.priceListId || 0}`} className="card-luxury p-4 rounded-lg">
                     <div className="flex gap-4">
                       {item.image?.match(/\.(mp4|webm|ogg)$/i) ? (
                         <video src={item.image} className="w-20 h-20 object-cover rounded flex-shrink-0" autoPlay muted loop playsInline />
@@ -50,7 +50,7 @@ export default function Cart() {
                         <div className="flex justify-between items-start gap-2">
                           <h3 className="font-luxury text-base leading-tight">{item.name.length > 50 ? item.name.substring(0, 50) + '…' : item.name}</h3>
                           <button
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => removeItem(item.id, item.priceListId)}
                             className="text-red-500 hover:text-red-700 transition flex-shrink-0"
                           >
                             <Trash2 size={18} />
@@ -64,7 +64,7 @@ export default function Cart() {
                             min="1"
                             max={item.maxSellAllowed || 10}
                             value={item.quantity}
-                            onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)))}
+                            onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)), item.priceListId)}
                             className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center text-sm"
                           />
                           <p className="text-sm text-gray-600 dark:text-gray-400">

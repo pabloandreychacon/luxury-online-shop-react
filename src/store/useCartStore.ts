@@ -9,8 +9,8 @@ interface CartStore {
   itemCount: number;
   loadFromStorage: () => void;
   addItem: (product: Product, quantity: number, priceListId?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string, priceListId?: number) => void;
+  updateQuantity: (productId: string, quantity: number, priceListId?: number) => void;
   clearCart: () => void;
   closeModal: () => void;
 }
@@ -51,15 +51,15 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ items, showModal: true, lastAddedProduct: product.name, ...calcTotals(items) });
   },
 
-  removeItem: (productId) => {
-    const items = get().items.filter((i) => i.id !== productId);
+  removeItem: (productId, priceListId) => {
+    const items = get().items.filter((i) => i.id !== productId || (priceListId !== undefined && (i.priceListId ?? 0) !== priceListId));
     saveToStorage(items);
     set({ items, ...calcTotals(items) });
   },
 
-  updateQuantity: (productId, quantity) => {
-    if (quantity <= 0) return get().removeItem(productId);
-    const items = get().items.map((i) => (i.id === productId ? { ...i, quantity } : i));
+  updateQuantity: (productId, quantity, priceListId) => {
+    if (quantity <= 0) return get().removeItem(productId, priceListId);
+    const items = get().items.map((i) => (i.id === productId && (priceListId === undefined || (i.priceListId ?? 0) === priceListId) ? { ...i, quantity } : i));
     saveToStorage(items);
     set({ items, ...calcTotals(items) });
   },

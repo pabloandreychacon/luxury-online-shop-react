@@ -12,12 +12,13 @@ interface ShippingMethod {
   BusinessEmail: string;
   Active: boolean;
   IdBusiness: number;
+  MaxWeightAllowed: number;
 }
 
 export default function AdminShippingMethods() {
   const { t } = useTranslation();
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
-  const [newMethod, setNewMethod] = useState({ description: '', price: 0, deliveryDays: 0 });
+  const [newMethod, setNewMethod] = useState({ description: '', price: 0, deliveryDays: 0, maxWeightAllowed: 0 });
 
   useEffect(() => {
     loadShippingMethods();
@@ -40,10 +41,11 @@ export default function AdminShippingMethods() {
       DeliveryDays: newMethod.deliveryDays,
       BusinessEmail: defaultSettings.email,
       Active: true,
-      IdBusiness: defaultSettings.id
+      IdBusiness: defaultSettings.id,
+      MaxWeightAllowed: newMethod.maxWeightAllowed
     }]);
 
-    setNewMethod({ description: '', price: 0, deliveryDays: 0 });
+    setNewMethod({ description: '', price: 0, deliveryDays: 0, maxWeightAllowed: 0 });
     loadShippingMethods();
   };
 
@@ -63,7 +65,7 @@ export default function AdminShippingMethods() {
         <h2 className="text-xl font-luxury text-gray-900 dark:text-white">
           {t('admin.addShippingMethod')}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
             type="text"
             placeholder={t('admin.shippingDescription')}
@@ -95,7 +97,20 @@ export default function AdminShippingMethods() {
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('admin.maxWeightAllowed')}
+            </label>
+            <input
+              type="number"
+              placeholder="0"
+              value={newMethod.maxWeightAllowed}
+              onChange={(e) => setNewMethod({ ...newMethod, maxWeightAllowed: parseFloat(e.target.value) || 0 })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
+            />
+          </div>
         </div>
+
         <button
           onClick={handleAddMethod}
           className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
@@ -108,7 +123,7 @@ export default function AdminShippingMethods() {
         <div key={method.Id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
           <div className="flex justify-between items-start">
             <div className="flex-1 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {t('admin.shippingDescription')}
@@ -139,6 +154,17 @@ export default function AdminShippingMethods() {
                     type="number"
                     defaultValue={method.DeliveryDays}
                     onBlur={(e) => handleUpdateMethod(method.Id, 'DeliveryDays', parseInt(e.target.value) || 0)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('admin.maxWeightAllowed')}
+                  </label>
+                  <input
+                    type="number"
+                    defaultValue={method.MaxWeightAllowed}
+                    onBlur={(e) => handleUpdateMethod(method.Id, 'MaxWeightAllowed', parseFloat(e.target.value) || 0)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold"
                   />
                 </div>

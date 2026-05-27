@@ -18,7 +18,7 @@ interface Product {
   Active: boolean;
   IsService: boolean;
   IsOffer: boolean;
-  Weigth: number;
+  Weight: number;
 }
 
 interface Category { Id: string; Name: string; DisplayName: string; CategoryId: number; }
@@ -47,7 +47,7 @@ export default function AdminProducts() {
   const [priceListInputValue, setPriceListInputValue] = useState<string>('');
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
-  const [editFields, setEditFields] = useState({ Price: 0, CategoryId: 0, BrandId: 0, Taxes: 0, Weigth: 0, Active: true, IsOffer: false });
+  const [editFields, setEditFields] = useState({ Price: 0, CategoryId: 0, BrandId: 0, Taxes: 0, Weight: 0, Active: true, IsOffer: false });
   const [langOptions, setLangOptions] = useState([
     { code: 'en', label: '🇺🇸 EN' },
     { code: 'es', label: '🇪🇸 ES' },
@@ -116,7 +116,7 @@ export default function AdminProducts() {
     setEditingProduct(product);
     setEditName(product.Name || '');
     setEditDescription(product.Description || '');
-    setEditFields({ Price: product.Price, CategoryId: product.CategoryId, BrandId: product.BrandId || 0, Taxes: product.Taxes, Weigth: product.Weigth, Active: product.Active, IsOffer: product.IsOffer });
+    setEditFields({ Price: product.Price, CategoryId: product.CategoryId, BrandId: product.BrandId || 0, Taxes: product.Taxes, Weight: product.Weight, Active: product.Active, IsOffer: product.IsOffer });
     setTranslationLang('en');
 
     const [{ data: media }, { data: translations }, { data: listPrices }] = await Promise.all([
@@ -189,7 +189,7 @@ export default function AdminProducts() {
       CategoryId: editFields.CategoryId,
       BrandId: editFields.BrandId || null,
       Taxes: editFields.Taxes,
-      Weigth: editFields.Weigth,
+      Weight: editFields.Weight,
       Active: editFields.Active,
       IsOffer: editFields.IsOffer,
     }).eq('Id', editingProduct.Id);
@@ -249,7 +249,7 @@ export default function AdminProducts() {
       CategoryId: newProduct.categoryId, Price: newProduct.price, ProductId: 0,
       StockQuantity: newProduct.stockQuantity, BusinessEmail: defaultSettings.email,
       BrandId: newProduct.brandId, Taxes: newProduct.taxes, Active: true,
-      IsService: false, IsOffer: newProduct.isOffer, IdBusiness: defaultSettings.id, Weigth: newProduct.weight
+      IsService: false, IsOffer: newProduct.isOffer, IdBusiness: defaultSettings.id, Weight: newProduct.weight
     }]).select('Id').maybeSingle();
 
     if (inserted?.Id) {
@@ -495,8 +495,8 @@ export default function AdminProducts() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('admin.weight')}</label>
-                  <input type="number" step="0.01" value={editFields.Weigth}
-                    onChange={(e) => setEditFields(f => ({ ...f, Weigth: parseFloat(e.target.value) || 0 }))}
+                  <input type="number" step="0.01" value={editFields.Weight}
+                    onChange={(e) => setEditFields(f => ({ ...f, Weight: parseFloat(e.target.value) || 0 }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-luxury-gold" />
                 </div>
                 <div className="flex items-center gap-4 mt-2">

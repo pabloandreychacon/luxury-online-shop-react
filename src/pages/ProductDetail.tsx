@@ -76,7 +76,8 @@ export default function ProductDetail() {
         rating: 4.5,
         reviews: 0,
         brandId: productData.BrandId || 0,
-        maxSellAllowed: (categoryData as any)?.MaxSellAllowed || 10
+        maxSellAllowed: (categoryData as any)?.MaxSellAllowed || 10,
+        weight: (productData as any)?.Weight || 0
       };
 
       setProduct(mappedProduct);

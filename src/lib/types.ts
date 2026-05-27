@@ -14,6 +14,7 @@ export interface Product {
   brandId?: number;
   brandName?: string;
   maxSellAllowed?: number;
+  weight?: number;
 }
 
 export interface CartItem extends Product {
