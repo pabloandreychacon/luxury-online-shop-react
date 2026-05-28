@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useSearchParams, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { FloatingButton, ScrollTop } from 'luna-components-library';
@@ -24,9 +24,19 @@ import { ShoppingBag } from 'lucide-react';
 function AppContent() {
   const { showModal, lastAddedProduct, closeModal, loadFromStorage } = useCartStore();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { i18n, t } = useTranslation();
   const [whatsappPhone, setWhatsappPhone] = useState('');
   const { itemCount } = useCart();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    requestAnimationFrame(() => window.scrollTo(0, 0));
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  }, []);
 
   useEffect(() => {
     loadFromStorage();

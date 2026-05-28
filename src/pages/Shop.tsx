@@ -18,16 +18,33 @@ export default function Shop() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedBrand, setSelectedBrand] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   const category = searchParams.get('category');
   const brandParam = searchParams.get('brand');
 
   useEffect(() => {
-    if (category) { setSelectedCategory(category); loadData(undefined, brandParam ? parseInt(brandParam) : undefined); }
-    if (brandParam) setSelectedBrand(parseInt(brandParam));
+    const initFromParams = async () => {
+      if (category) {
+        setSelectedCategory(category);
+        const { data: cats } = await supabase
+          .from('Categories')
+          .select('Id, Name')
+          .eq('IdBusiness', defaultSettings.id)
+          .eq('Active', true);
+        const match = (cats || []).find(c => c.Id.toString() === category || c.Name?.toLowerCase() === category);
+        loadData(match ? Number(match.Id) : undefined, brandParam ? parseInt(brandParam) : undefined);
+      } else {
+        loadData(undefined, brandParam ? parseInt(brandParam) : undefined);
+      }
+      if (brandParam) setSelectedBrand(parseInt(brandParam));
+    };
+    initFromParams();
+    setMounted(true);
   }, [category, brandParam]);
 
   useEffect(() => {
+    if (!mounted) return;
     loadData();
   }, [i18n.language]);
 
@@ -63,7 +80,7 @@ export default function Shop() {
     if (brandId) {
       query = query.eq('BrandId', brandId);
     }
-    if (!effectiveCategoryId && !brandId) {
+    if (!brandId) {
       query = query.order('Name', { ascending: true }).limit(100);
     }
     const { data: productsData } = await query;
@@ -165,7 +182,7 @@ export default function Shop() {
         <div className="mb-12">
           <h1 className="section-title">{t('shop.title')}</h1>
           <p className="text-center text-gray-600 dark:text-gray-400">
-            {category && `${t('shop.showing')} ${category.charAt(0).toUpperCase() + category.slice(1)}s - `}
+            {category && `${t('shop.showing')} ${category.charAt(0).toUpperCase() + category.slice(1)} - `}
             {filteredProducts.length} {t('shop.products')}
           </p>
         </div>
@@ -182,7 +199,7 @@ export default function Shop() {
                 <select
                   className="w-full px-3 py-2 rounded text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
                   value={selectedCategory}
-                   onChange={(e) => { const val = e.target.value; if (val === '') { setSelectedCategory(''); loadData(0, selectedBrand || undefined); } else { const cat = categories.find(c => c.Name.toLowerCase() === val); if (cat) { setSelectedCategory(val); loadData(Number(cat.Id), selectedBrand || undefined); } } }}
+                  onChange={(e) => { const val = e.target.value; if (val === '') { setSelectedCategory(''); loadData(0, selectedBrand || undefined); } else { const cat = categories.find(c => c.Name.toLowerCase() === val); if (cat) { setSelectedCategory(val); loadData(Number(cat.Id), selectedBrand || undefined); } } }}
                 >
                   <option value="">{t('shop.allProducts')}</option>
                   {categories.map(cat => (

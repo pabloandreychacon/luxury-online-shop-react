@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { ShoppingBag, Heart, ArrowLeft, Share2, Check } from 'lucide-react';
@@ -14,7 +14,6 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const { i18n } = useTranslation();
-  const navigate = useNavigate();
   const { addItem } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [quantity, setQuantity] = useState(1);
@@ -260,13 +259,13 @@ export default function ProductDetail() {
       {/* Breadcrumb Navigation */}
       <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="container-luxury py-4">
-          <button
-            onClick={() => navigate(-1)}
+          <Link
+            to="/shop"
             className="flex items-center gap-2 text-luxury-gold hover:text-opacity-80 transition mb-4"
           >
             <ArrowLeft size={18} />
             Back
-          </button>
+          </Link>
           <nav className="text-sm text-gray-600 dark:text-gray-400">
             <Link to="/" className="hover:text-luxury-gold transition">Home</Link>
             <span className="mx-2">/</span>
