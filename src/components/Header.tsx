@@ -174,6 +174,16 @@ export default function Header() {
                 ))}
               </select>
             </div>
+            {/* Theme Toggle */}
+            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => { setMenuOpen(false); toggleDarkMode(); }}
+                className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-luxury-gold"
+              >
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                {isDark ? 'Light Mode' : t('common.darkMode')}
+              </button>
+            </div>
           </nav>
         )}
       </div>
