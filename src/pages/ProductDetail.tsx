@@ -412,16 +412,25 @@ export default function ProductDetail() {
                 <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
                   {t('product.quantity')}
                 </label>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded text-lg font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    disabled={quantity <= 1}
+                  >-</button>
                   <input
                     type="number"
                     min="1"
                     max={product.maxSellAllowed || 10}
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, Math.min(product.maxSellAllowed || 10, parseInt(e.target.value) || 1)))}
-                    className="w-20 px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-center"
-                    disabled={false}
+                    className="w-16 sm:w-20 px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-center text-base"
                   />
+                  <button
+                    onClick={() => setQuantity(Math.min(product.maxSellAllowed || 10, quantity + 1))}
+                    className="w-10 h-10 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded text-lg font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    disabled={quantity >= (product.maxSellAllowed || 10)}
+                  >+</button>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {t('product.maxPerOrder', { max: product.maxSellAllowed || 10 })}
                   </span>

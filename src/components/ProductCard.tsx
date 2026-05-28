@@ -32,7 +32,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="card-luxury rounded-lg overflow-hidden group">
       {/* Image Container */}
-      <Link to={`/product/${product.id}`} className="relative h-80 bg-gray-200 dark:bg-gray-800 overflow-hidden block">
+      <Link to={`/product/${product.id}`} className="relative h-48 md:h-80 bg-gray-200 dark:bg-gray-800 overflow-hidden block">
         {!product.image ? (
           <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">—</div>
         ) : /\.mp4$/i.test(product.image) ? (
@@ -70,7 +70,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         {/* Category & Rating */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-luxury-gold uppercase tracking-wider">
@@ -119,24 +119,35 @@ export default function ProductCard({ product }: ProductCardProps) {
           </select>
         )}
 
-        {/* Add to Cart */}
-        <div className="flex items-center gap-2">
+        {/* Quantity */}
+        <div className="flex items-center gap-1 mb-2">
+          <button
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded text-base font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            disabled={quantity <= 1}
+          >-</button>
           <input
             type="number"
             min="1"
             max={product.maxSellAllowed || 10}
             value={quantity}
             onChange={(e) => setQuantity(Math.min(product.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)))}
-            className="w-16 px-2 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-sm"
+            className="w-12 sm:w-16 px-1 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-sm text-center"
           />
           <button
-            onClick={handleAddToCart}
-            className="flex-1 py-2 px-3 rounded flex items-center justify-center gap-2 transition bg-luxury-gold text-luxury-dark hover:bg-opacity-90 font-semibold"
-          >
-            <ShoppingBag size={16} />
-            {showAdded ? '✓' : t('product.addToCart')}
-          </button>
+            onClick={() => setQuantity(Math.min(product.maxSellAllowed || 10, quantity + 1))}
+            className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded text-base font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            disabled={quantity >= (product.maxSellAllowed || 10)}
+          >+</button>
         </div>
+        {/* Add to Cart */}
+        <button
+          onClick={handleAddToCart}
+          className="w-full py-2 px-3 rounded flex items-center justify-center gap-2 transition bg-luxury-gold text-luxury-dark hover:bg-opacity-90 font-semibold"
+        >
+          <ShoppingBag size={16} />
+          {showAdded ? '✓' : t('product.addToCart')}
+        </button>
 
         {/* View Details Link */}
         <Link

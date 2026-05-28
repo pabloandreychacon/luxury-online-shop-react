@@ -19,6 +19,7 @@ export default function Shop() {
   const [selectedBrand, setSelectedBrand] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const category = searchParams.get('category');
   const brandParam = searchParams.get('brand');
@@ -176,22 +177,25 @@ export default function Shop() {
   if (loading) return <Preloader isLoading={loading} backgroundColor="#0f0f0f" accentColor="#d4af37" size={70} borderWidth={3} />;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-20">
       <div className="container-luxury">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="section-title">{t('shop.title')}</h1>
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            {category && `${t('shop.showing')} ${category.charAt(0).toUpperCase() + category.slice(1)} - `}
-            {filteredProducts.length} {t('shop.products')}
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar - Filters */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-gray-50 dark:bg-gray-800 p-6 rounded-lg max-h-[calc(100vh-8rem)] overflow-y-auto">
-              <h3 className="font-luxury text-lg mb-6">{t('shop.filters')}</h3>
+          <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start sticky top-20 z-10">
+            {/* Mobile filter toggle */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="lg:hidden w-full mb-4 px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300"
+            >
+              {t('shop.filters')}
+              <span className={`transition-transform ${showFilters ? 'rotate-180' : ''}`}>▼</span>
+            </button>
+            <div className={`${showFilters ? 'fixed inset-x-0 top-20 bottom-0 z-20 bg-white dark:bg-gray-900 p-4 overflow-y-auto' : 'hidden'} lg:block lg:static lg:inset-auto lg:z-auto lg:bg-transparent lg:p-0 lg:overflow-visible`}>
+              <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg max-h-[calc(100vh-6rem)] overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-luxury text-lg">{t('shop.filters')}</h3>
+                  <button onClick={() => setShowFilters(false)} className="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xl leading-none">&times;</button>
+                </div>
 
               {/* Category Filter */}
               <div className="mb-8">
@@ -199,7 +203,7 @@ export default function Shop() {
                 <select
                   className="w-full px-3 py-2 rounded text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
                   value={selectedCategory}
-                  onChange={(e) => { const val = e.target.value; if (val === '') { setSelectedCategory(''); loadData(0, selectedBrand || undefined); } else { const cat = categories.find(c => c.Name.toLowerCase() === val); if (cat) { setSelectedCategory(val); loadData(Number(cat.Id), selectedBrand || undefined); } } }}
+                  onChange={(e) => { const val = e.target.value; if (val === '') { setSelectedCategory(''); loadData(0, selectedBrand || undefined); } else { const cat = categories.find(c => c.Name.toLowerCase() === val); if (cat) { setSelectedCategory(val); loadData(Number(cat.Id), selectedBrand || undefined); } } setShowFilters(false); }}
                 >
                   <option value="">{t('shop.allProducts')}</option>
                   {categories.map(cat => (
@@ -214,7 +218,7 @@ export default function Shop() {
                 <select
                   className="w-full px-3 py-2 rounded text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
                   value={selectedBrand}
-                  onChange={(e) => { const val = parseInt(e.target.value); setSelectedBrand(val); const catId = selectedCategory ? categories.find(c => c.Name.toLowerCase() === selectedCategory)?.Id : undefined; loadData(catId ? Number(catId) : undefined, val || undefined); }}
+                  onChange={(e) => { const val = parseInt(e.target.value); setSelectedBrand(val); const catId = selectedCategory ? categories.find(c => c.Name.toLowerCase() === selectedCategory)?.Id : undefined; loadData(catId ? Number(catId) : undefined, val || undefined); setShowFilters(false); }}
                 >
                   <option value={0}>{t('shop.allBrands')}</option>
                   {brands.map(brand => (
@@ -245,7 +249,7 @@ export default function Shop() {
                 <label className="block text-sm font-semibold mb-4">{t('shop.sortBy')}</label>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => { setSortBy(e.target.value); setShowFilters(false); }}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
                 >
                   <option value="featured">{t('shop.featured')}</option>
@@ -254,17 +258,18 @@ export default function Shop() {
                   <option value="rating">{t('shop.highestRated')}</option>
                 </select>
               </div>
+              </div>
             </div>
           </div>
 
-          {/* Products Grid */}
+        {/* Products Grid */}
           <div className="lg:col-span-3">
             {filteredProducts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-600 dark:text-gray-400 text-lg">{t('common.noResults')}</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-8">
                 {filteredProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
