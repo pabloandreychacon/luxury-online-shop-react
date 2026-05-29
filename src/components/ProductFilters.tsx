@@ -58,6 +58,7 @@ export default function ProductFilters({
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('shop.category')}</label>
             <select value={filterCategory} onChange={(e) => { onCategoryChange(parseInt(e.target.value)); onCloseFilters(); }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
+              <option value={0}>{t('shop.allCategories')}</option>
               {sortedCategories.map(c => <option key={c.Id} value={c.Id}>{c.DisplayName || c.Name}</option>)}
             </select>
           </div>
@@ -65,6 +66,7 @@ export default function ProductFilters({
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.brand')}</label>
             <select value={filterBrand} onChange={(e) => { onBrandChange(parseInt(e.target.value)); onCloseFilters(); }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
+              <option value={0}>{t('shop.allBrands')}</option>
               {sortedBrands.map(b => <option key={b.Id} value={b.Id}>{b.DisplayName || b.Name}</option>)}
             </select>
           </div>

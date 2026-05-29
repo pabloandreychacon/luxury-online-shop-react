@@ -47,9 +47,10 @@ export default function Shop() {
         }
       } else {
         const brandId = brandParam ? parseInt(brandParam) : 3;
-        setSelectedCategory(111);
+        const catId = brandParam ? 0 : 111;
+        setSelectedCategory(catId);
         setSelectedBrand(brandId);
-        loadData(111, brandId);
+        loadData(catId || undefined, brandId);
       }
     };
     initFromParams();
