@@ -76,7 +76,9 @@ export default function ProductDetail() {
         reviews: 0,
         brandId: productData.BrandId || 0,
         maxSellAllowed: (categoryData as any)?.MaxSellAllowed || 10,
-        weight: (productData as any)?.Weight || 0
+        weight: (productData as any)?.Weight || 0,
+        discountPercent: (productData as any)?.DiscountPercent || 0,
+        discountMinQuantity: (productData as any)?.DiscountMinQuantity || 1,
       };
 
       setProduct(mappedProduct);
@@ -185,7 +187,9 @@ export default function ProductDetail() {
           description: tr?.Description || p.Description || '',
           material: '',
           rating: 4.5,
-          reviews: 0
+          reviews: 0,
+          discountPercent: (p as any)?.DiscountPercent || 0,
+          discountMinQuantity: (p as any)?.DiscountMinQuantity || 1,
         };
       });
       setRelatedProducts(mapped);

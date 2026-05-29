@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext';
+import type { CartItem } from '../lib/types';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, AlertTriangle } from 'lucide-react';
 import { logger } from 'luna-components-library';
@@ -128,13 +129,14 @@ export default function Checkout() {
     (productsData || []).forEach((p: any) => { productNameMap[p.Id] = p.Name; });
 
     for (const item of items) {
+      const discountedPrice = getDiscountedPrice(item);
       await supabase.from('OrderItems').insert([{
         PaypalOrderId: paypalOrderId,
         ProductId: parseInt(item.id),
         ProductName: item.name || productNameMap[parseInt(item.id)] || '',
         Quantity: item.quantity,
-        Price: item.price,
-        ItemTotal: item.price * item.quantity,
+        Price: discountedPrice,
+        ItemTotal: discountedPrice * item.quantity,
         OrderId: orderId,
         PriceListId: item.priceListId || null
       }]);
@@ -147,10 +149,15 @@ export default function Checkout() {
     const itemsList = items.map(item => {
       const priceListLabel = item.priceListId ? priceLists.find(pl => pl.Id === item.priceListId)?.Label : null;
       const name = productNameMap[parseInt(item.id)] || item.name;
-      return `${name}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`;
+      const lineDiscounted = getDiscountedLineTotal(item);
+      const lineOriginal = getLineTotal(item);
+      const priceStr = lineDiscounted < lineOriginal
+        ? `$${lineDiscounted.toFixed(2)} (was $${lineOriginal.toFixed(2)})`
+        : `$${lineOriginal.toFixed(2)}`;
+      return `${name}${priceListLabel ? ` [${priceListLabel}]` : ''} - Qty: ${item.quantity} - ${priceStr}`;
     }).join('\n');
 
-    const orderSummary = `Order Number: ${orderNumber}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}${orderNotes ? `\nNotes: ${orderNotes}` : ''}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`;
+    const orderSummary = `Order Number: ${orderNumber}\n\nShipping Method: ${selectedShipping?.Description}\nShipping Address: ${shippingAddress}${orderNotes ? `\nNotes: ${orderNotes}` : ''}\n\nItems:\n${itemsList}\n\nSubtotal: $${total.toFixed(2)}${totalSavings > 0 ? `\nSavings: -$${totalSavings.toFixed(2)}` : ''}${taxAmount > 0 ? `\nTax: $${taxAmount.toFixed(2)}` : ''}\nShipping: $${shippingCost.toFixed(2)}\nTotal: $${grandTotal.toFixed(2)}`;
 
     const signature = `\n\n---\n${businessName}\n${businessEmail}\n${businessPhone}`;
 
@@ -172,6 +179,21 @@ export default function Checkout() {
     ]);
   };
 
+  // Discount helpers
+  const getDiscountedPrice = (item: CartItem) => {
+    const dp = item.discountPercent || 0;
+    const dmq = item.discountMinQuantity || 1;
+    if (dp > 0 && item.quantity >= dmq) return item.price * (1 - dp / 100);
+    return item.price;
+  };
+
+  const getLineTotal = (item: CartItem) => item.price * item.quantity;
+  const getDiscountedLineTotal = (item: CartItem) => getDiscountedPrice(item) * item.quantity;
+  const getItemSavings = (item: CartItem) => getLineTotal(item) - getDiscountedLineTotal(item);
+
+  const discountedTotal = items.reduce((sum, item) => sum + getDiscountedLineTotal(item), 0);
+  const totalSavings = total - discountedTotal;
+
   const taxAmount = items.reduce((sum, item) => {
     const itemTax = (item.taxes && item.taxes > 0) ? (item.price * item.quantity * item.taxes / 100) : 0;
     return sum + itemTax;
@@ -181,7 +203,7 @@ export default function Checkout() {
   logger.info('Weight check:', { totalWeight, items: items.map(i => ({ id: i.id, weight: i.weight, qty: i.quantity })), selectedShipping: selectedShipping ? { Id: selectedShipping.Id, MaxWeightAllowed: selectedShipping.MaxWeightAllowed } : null });
 
   const shippingCost = selectedShipping?.Price || 0;
-  const grandTotal = total + taxAmount + shippingCost;
+  const grandTotal = discountedTotal + taxAmount + shippingCost;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 pt-8 pb-20">
@@ -195,7 +217,13 @@ export default function Checkout() {
             <div className="card-luxury p-6 rounded-lg">
               <h2 className="font-luxury text-2xl mb-6">{t('checkout.yourItems')}</h2>
               <div className="space-y-4">
-                {items.map(item => (
+                {items.map(item => {
+                  const dp = item.discountPercent || 0;
+                  const dmq = item.discountMinQuantity || 1;
+                  const discountApplies = dp > 0 && item.quantity >= dmq;
+                  const discountedPrice = getDiscountedPrice(item);
+                  const savings = getItemSavings(item);
+                  return (
                   <div key={`${item.id}-${item.priceListId || 0}`} className="flex gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0">
                     {item.image?.match(/\.(mp4|webm|ogg)$/i) ? (
                       <video src={item.image} className="w-16 h-16 object-cover rounded flex-shrink-0" autoPlay muted loop playsInline />
@@ -213,7 +241,28 @@ export default function Checkout() {
                           Report
                         </button>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">${item.price.toFixed(2)}{item.weight ? ` · ${(item.weight * item.quantity).toFixed(2)} kg` : ''}</p>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {discountApplies ? (
+                          <span>
+                            <span className="line-through">${item.price.toFixed(2)}</span>{' '}
+                            <span className="text-green-600 font-semibold">${discountedPrice.toFixed(2)}</span>
+                            <span className="ml-2 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-semibold">-{dp}%</span>
+                          </span>
+                        ) : (
+                          <span>${item.price.toFixed(2)}</span>
+                        )}
+                        {item.weight ? <span> · ${(item.weight * item.quantity).toFixed(2)} kg</span> : ''}
+                      </div>
+                      {dp > 0 && !discountApplies && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                          {t('checkout.discountQualify', { n: dmq - item.quantity, p: dp })}
+                        </p>
+                      )}
+                      {discountApplies && (
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          {t('checkout.youSave')} ${savings.toFixed(2)}
+                        </p>
+                      )}
                       <div className="flex items-center gap-2 mt-2">
                         <input
                           type="number"
@@ -229,7 +278,8 @@ export default function Checkout() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -295,6 +345,12 @@ export default function Checkout() {
                   <span>{t('cart.subtotal')}</span>
                   <span>${total.toFixed(2)}</span>
                 </div>
+                {totalSavings > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                    <span>{t('checkout.savings')}</span>
+                    <span>-${totalSavings.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span>{t('cart.tax')}</span>
                   <span>${taxAmount.toFixed(2)}</span>

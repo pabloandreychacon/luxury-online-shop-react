@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { defaultSettings, getSettings } from '../data/settings';
+import { Preloader } from 'luna-components-library';
 
 interface Order {
   Id: number;
@@ -46,6 +47,7 @@ export default function AdminOrders() {
   const [emailSent, setEmailSent] = useState<number | null>(null);
   const [pendingUpdate, setPendingUpdate] = useState<PendingUpdate | null>(null);
   const [priceLists, setPriceLists] = useState<{ Id: number; Label: string }[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const ORDER_STATUSES = [
     { id: 1, label: t('admin.orderStatusPaid') },
@@ -55,7 +57,12 @@ export default function AdminOrders() {
 
   const EMAIL_TRIGGER_FIELDS = ['StatusId', 'TrackingNumber', 'Notes'];
 
-  useEffect(() => { loadOrders(); loadPriceLists(); }, []);
+  useEffect(() => {
+    (async () => {
+      await Promise.all([loadOrders(), loadPriceLists()]);
+      setLoading(false);
+    })();
+  }, []);
 
   const loadPriceLists = async () => {
     const { data } = await supabase.from('PriceLists').select('Id, Label').eq('Active', true).eq('IdBusiness', defaultSettings.id);
@@ -169,6 +176,8 @@ export default function AdminOrders() {
     }
     setExpandedOrders(newExpanded);
   };
+
+  if (loading) return <Preloader isLoading={loading} backgroundColor="#0f0f0f" accentColor="#d4af37" size={70} borderWidth={3} />;
 
   return (
     <div className="space-y-6">

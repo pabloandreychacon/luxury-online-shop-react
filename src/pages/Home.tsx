@@ -87,7 +87,9 @@ export default function Home() {
             reviews: 0,
             taxes: productData.Taxes || 0,
             maxSellAllowed: (category as any).MaxSellAllowed || 10,
-            weight: (productData as any)?.Weight || 0
+            weight: (productData as any)?.Weight || 0,
+            discountPercent: (productData as any)?.DiscountPercent || 0,
+            discountMinQuantity: (productData as any)?.DiscountMinQuantity || 1,
           });
         }
       }
