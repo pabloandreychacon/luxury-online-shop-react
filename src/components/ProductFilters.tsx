@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Search } from 'lucide-react';
 
 interface FilterCat { Id: number | string; DisplayName?: string; Name?: string; }
 interface FilterBrand { Id: number | string; DisplayName?: string; Name?: string; }
@@ -9,11 +11,9 @@ interface ProductFiltersProps {
   filterCategory: number;
   filterBrand: number;
   searchName: string;
-  filterPriceMax: number;
   onCategoryChange: (categoryId: number) => void;
   onBrandChange: (brandId: number) => void;
   onSearchChange: (name: string) => void;
-  onPriceMaxChange: (max: number) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
   onCloseFilters: () => void;
@@ -24,13 +24,22 @@ interface ProductFiltersProps {
 
 export default function ProductFilters({
   categories, brands,
-  filterCategory, filterBrand, searchName, filterPriceMax,
-  onCategoryChange, onBrandChange, onSearchChange, onPriceMaxChange,
+  filterCategory, filterBrand, searchName,
+  onCategoryChange, onBrandChange, onSearchChange,
   showFilters, onToggleFilters, onCloseFilters,
   title, children, className,
 }: ProductFiltersProps) {
   const { t } = useTranslation();
   const panelTitle = title || t('shop.filters');
+  const [localSearch, setLocalSearch] = useState(searchName);
+
+  const sortedCategories = [...categories].sort((a, b) => (a.DisplayName || a.Name || '').localeCompare(b.DisplayName || b.Name || ''));
+  const sortedBrands = [...brands].sort((a, b) => (a.DisplayName || a.Name || '').localeCompare(b.DisplayName || b.Name || ''));
+
+  const handleSearch = () => {
+    onSearchChange(localSearch);
+    onCloseFilters();
+  };
 
   return (
     <div className="sticky top-20 z-10">
@@ -49,31 +58,32 @@ export default function ProductFilters({
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('shop.category')}</label>
             <select value={filterCategory} onChange={(e) => { onCategoryChange(parseInt(e.target.value)); onCloseFilters(); }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
-              {categories.map(c => <option key={c.Id} value={c.Id}>{c.DisplayName || c.Name}</option>)}
+              {sortedCategories.map(c => <option key={c.Id} value={c.Id}>{c.DisplayName || c.Name}</option>)}
             </select>
           </div>
           <div className="flex-1 min-w-40">
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('product.brand')}</label>
             <select value={filterBrand} onChange={(e) => { onBrandChange(parseInt(e.target.value)); onCloseFilters(); }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold">
-              <option value={0}>{t('shop.allBrands')}</option>
-              {brands.map(b => <option key={b.Id} value={b.Id}>{b.DisplayName || b.Name}</option>)}
+              {sortedBrands.map(b => <option key={b.Id} value={b.Id}>{b.DisplayName || b.Name}</option>)}
             </select>
           </div>
-          <div className="flex-1 min-w-40">
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.search')}</label>
-            <input type="text" placeholder={t('admin.searchByName')} value={searchName}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold" />
+          <div className="w-full lg:contents grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="min-w-0 lg:flex-1 lg:min-w-48">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.search')}</label>
+              <div className="flex gap-1">
+                <input type="text" placeholder={t('admin.searchByName')} value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-luxury-gold" />
+                <button onClick={handleSearch}
+                  className="px-3 py-2 bg-luxury-gold text-luxury-dark rounded-lg hover:bg-opacity-90 transition flex items-center justify-center">
+                  <Search size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="min-w-0 lg:flex-1 lg:min-w-32 flex flex-wrap gap-4">{children}</div>
           </div>
-          <div className="flex-1 min-w-32">
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('shop.priceRange')}</label>
-            <input type="range" min="0" max="5000" step="100" value={filterPriceMax}
-              onChange={(e) => onPriceMaxChange(parseInt(e.target.value))}
-              className="w-full" />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('shop.upTo')} ${filterPriceMax.toLocaleString()}</p>
-          </div>
-          {children}
         </div>
       </div>
     </div>

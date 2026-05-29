@@ -67,14 +67,18 @@ export default function AdminProducts() {
   const [filterCategory, setFilterCategory] = useState(0);
   const [filterBrand, setFilterBrand] = useState(0);
   const [searchName, setSearchName] = useState('');
-  const [filterPriceMax, setFilterPriceMax] = useState(5000);
   const [sortBy, setSortBy] = useState('name');
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      await Promise.all([loadCategories(), loadBrands(), loadLanguageOptions(), loadPriceLists()]);
+      const [catId, brandId] = await Promise.all([loadCategories(), loadBrands(), loadLanguageOptions(), loadPriceLists()]);
+      if (catId && brandId) {
+        await loadProducts(catId, brandId);
+      } else if (catId) {
+        await loadProducts(catId);
+      }
       setLoading(false);
     })();
   }, []);
@@ -99,20 +103,18 @@ export default function AdminProducts() {
     setProducts(data);
   };
 
-  const loadCategories = async () => {
+  const loadCategories = async (): Promise<number | undefined> => {
     const { data } = await supabase.from('Categories').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true).order('Name', { ascending: true });
-    const cats = data || [];
-    setCategories(cats);
-    if (cats.length > 0) {
-      const firstId = Number(cats[0].Id);
-      setFilterCategory(firstId);
-      await loadProducts(firstId);
-    }
+    setCategories(data || []);
+    setFilterCategory(111);
+    return 111;
   };
 
-  const loadBrands = async () => {
+  const loadBrands = async (): Promise<number | undefined> => {
     const { data } = await supabase.from('Brands').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true).order('Name', { ascending: true });
     setBrands(data || []);
+    setFilterBrand(3);
+    return 3;
   };
 
   const loadLanguageOptions = async () => {
@@ -312,7 +314,6 @@ export default function AdminProducts() {
 
   const filteredProducts = [...products]
     .filter(p => !searchName || (p.Name || '').toLowerCase().includes(searchName.toLowerCase()))
-    .filter(p => p.Price <= filterPriceMax)
     .sort((a, b) => {
       if (sortBy === 'name') return (a.Name || '').localeCompare(b.Name || '');
       if (sortBy === 'price-low') return a.Price - b.Price;
@@ -418,11 +419,9 @@ export default function AdminProducts() {
         filterCategory={filterCategory}
         filterBrand={filterBrand}
         searchName={searchName}
-        filterPriceMax={filterPriceMax}
         onCategoryChange={(val) => { setFilterCategory(val); loadProducts(val, filterBrand || undefined); }}
         onBrandChange={(val) => { setFilterBrand(val); loadProducts(filterCategory || undefined, val || undefined); }}
         onSearchChange={setSearchName}
-        onPriceMaxChange={setFilterPriceMax}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         onCloseFilters={() => setShowFilters(false)}

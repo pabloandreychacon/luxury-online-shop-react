@@ -32,7 +32,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="card-luxury rounded-lg overflow-hidden group">
       {/* Image Container */}
-      <Link to={`/product/${product.id}`} className="relative h-48 md:h-80 bg-gray-200 dark:bg-gray-800 overflow-hidden block">
+      <Link to={`/product/${product.id}`} className="relative h-36 md:h-56 bg-gray-200 dark:bg-gray-800 overflow-hidden block">
         {!product.image ? (
           <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">—</div>
         ) : /\.mp4$/i.test(product.image) ? (

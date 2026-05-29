@@ -44,9 +44,15 @@ export const useCartStore = create<CartStore>((set, get) => ({
   addItem: (product, quantity, priceListId = 0) => {
     const prevItems = get().items;
     const existing = prevItems.find((i) => i.id === product.id && (i.priceListId ?? 0) === priceListId);
-    const items = existing
-      ? prevItems.map((i) => (i.id === product.id && (i.priceListId ?? 0) === priceListId ? { ...i, quantity: i.quantity + quantity } : i))
-      : [...prevItems, { ...product, quantity, priceListId }];
+    const maxAllowed = product.maxSellAllowed;
+    let items: CartItem[];
+    if (existing && maxAllowed && existing.quantity >= maxAllowed) {
+      items = prevItems.map((i) => (i.id === product.id && (i.priceListId ?? 0) === priceListId ? { ...i, quantity } : i));
+    } else if (existing) {
+      items = prevItems.map((i) => (i.id === product.id && (i.priceListId ?? 0) === priceListId ? { ...i, quantity: i.quantity + quantity } : i));
+    } else {
+      items = [...prevItems, { ...product, quantity, priceListId }];
+    }
     saveToStorage(items);
     set({ items, showModal: true, lastAddedProduct: product.name, ...calcTotals(items) });
   },

@@ -12,7 +12,6 @@ export default function Shop() {
   const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState('name');
-  const [maxPrice, setMaxPrice] = useState(5000);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
@@ -47,9 +46,11 @@ export default function Shop() {
           }
         }
       } else {
-        loadData(undefined, brandParam ? parseInt(brandParam) : undefined);
+        const brandId = brandParam ? parseInt(brandParam) : 3;
+        setSelectedCategory(111);
+        setSelectedBrand(brandId);
+        loadData(111, brandId);
       }
-      if (brandParam) setSelectedBrand(parseInt(brandParam));
     };
     initFromParams();
     setMounted(true);
@@ -57,10 +58,10 @@ export default function Shop() {
 
   useEffect(() => {
     if (!mounted) return;
-    loadData(selectedCategory || undefined, selectedBrand || undefined);
+    loadData(selectedCategory || undefined, selectedBrand || undefined, searchName);
   }, [i18n.language]);
 
-  const loadData = async (categoryId?: number, brandId?: number) => {
+  const loadData = async (categoryId?: number, brandId?: number, search?: string) => {
     setLoading(true);
     // Load categories first
     const { data: categoriesData } = await supabase
@@ -80,9 +81,6 @@ export default function Shop() {
     setBrands((brandsData || []).sort((a, b) => (a.DisplayName || a.Name || '').localeCompare(b.DisplayName || b.Name || '')));
 
     const effectiveCategoryId = categoryId !== undefined ? categoryId : undefined;
-    if (!category && !brandParam && categoryId === undefined) {
-      setSelectedCategory(0);
-    }
 
     // Then load products
     let query = supabase.from('Products').select('*').eq('IdBusiness', defaultSettings.id).eq('Active', true);
@@ -92,8 +90,11 @@ export default function Shop() {
     if (brandId) {
       query = query.eq('BrandId', brandId);
     }
-    if (!brandId) {
-      query = query.order('Name', { ascending: true }).limit(100);
+    if (search) {
+      query = query.ilike('Name', `%${search}%`);
+    }
+    if (!effectiveCategoryId && !brandId && !search) {
+      query = query.order('Name', { ascending: true });
     }
     const { data: productsData } = await query;
 
@@ -158,29 +159,6 @@ export default function Shop() {
 
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
-
-    // Filter by name
-    if (searchName) {
-      filtered = filtered.filter(p => p.name.toLowerCase().includes(searchName.toLowerCase()));
-    }
-
-    // Filter by category if specified
-    if (selectedCategory > 0) {
-      const cat = categories.find(c => Number(c.Id) === selectedCategory);
-      if (cat) {
-        const catName = (cat.Name || '').toLowerCase();
-        filtered = filtered.filter(p => p.category === catName);
-      }
-    }
-
-    if (selectedBrand) {
-      filtered = filtered.filter(p => p.brandId === selectedBrand);
-    }
-
-    // Filter by price
-    filtered = filtered.filter(p => p.price <= maxPrice);
-
-    // Sort
     if (sortBy === 'name') {
       filtered.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'price-low') {
@@ -192,9 +170,8 @@ export default function Shop() {
     } else {
       filtered.sort((a, b) => a.name.localeCompare(b.name));
     }
-
     return filtered;
-  }, [products, selectedCategory, selectedBrand, maxPrice, sortBy, searchName]);
+  }, [products, sortBy]);
 
   if (loading) return <Preloader isLoading={loading} backgroundColor="#0f0f0f" accentColor="#d4af37" size={70} borderWidth={3} />;
 
@@ -207,18 +184,16 @@ export default function Shop() {
           filterCategory={selectedCategory}
           filterBrand={selectedBrand}
           searchName={searchName}
-          filterPriceMax={maxPrice}
-          onCategoryChange={(val) => { setSelectedCategory(val); loadData(val || undefined, selectedBrand || undefined); }}
-          onBrandChange={(val) => { setSelectedBrand(val); loadData(selectedCategory || undefined, val || undefined); }}
-          onSearchChange={setSearchName}
-          onPriceMaxChange={setMaxPrice}
+          onCategoryChange={(val) => { setSelectedCategory(val); loadData(val || undefined, selectedBrand || undefined, searchName); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onBrandChange={(val) => { setSelectedBrand(val); loadData(selectedCategory || undefined, val || undefined, searchName); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onSearchChange={(val) => { setSearchName(val); loadData(selectedCategory || undefined, selectedBrand || undefined, val); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters(!showFilters)}
           onCloseFilters={() => setShowFilters(false)}
         >
           <div className="flex-1 min-w-32">
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{t('shop.sortBy')}</label>
-            <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setShowFilters(false); }}
+            <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setShowFilters(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm">
               <option value="name">{t('common.name')}</option>
               <option value="price-low">{t('shop.priceLow')}</option>
