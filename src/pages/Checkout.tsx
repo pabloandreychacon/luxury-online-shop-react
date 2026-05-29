@@ -264,14 +264,17 @@ export default function Checkout() {
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-2">
-                        <input
-                          type="number"
-                          min="1"
-                          max={item.maxSellAllowed || 10}
-                          value={item.quantity}
-                          onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)), item.priceListId)}
-                          className="w-14 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center text-sm"
-                        />
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1), item.priceListId)}
+                            className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded text-base font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            disabled={item.quantity <= 1}>-</button>
+                          <input type="number" min="1" max={item.maxSellAllowed || 10} value={item.quantity}
+                            onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)), item.priceListId)}
+                            className="w-12 sm:w-16 px-1 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-sm text-center" />
+                          <button onClick={() => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, item.quantity + 1), item.priceListId)}
+                            className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded text-base font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            disabled={item.quantity >= (item.maxSellAllowed || 10)}>+</button>
+                        </div>
                         <button onClick={() => removeItem(item.id, item.priceListId)} className="text-red-500 hover:text-red-700 flex-shrink-0">
                           <Trash2 size={16} />
                         </button>

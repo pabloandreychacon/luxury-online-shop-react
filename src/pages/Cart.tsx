@@ -58,16 +58,19 @@ export default function Cart() {
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.material}</p>
                         <p className="font-luxury text-luxury-gold mt-1">${item.price.toFixed(2)}{item.weight ? ` · ${(item.weight * item.quantity).toFixed(2)} kg` : ''}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <input
-                            type="number"
-                            min="1"
-                            max={item.maxSellAllowed || 10}
-                            value={item.quantity}
-                            onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)), item.priceListId)}
-                            className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded text-center text-sm"
-                          />
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1), item.priceListId)}
+                              className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded text-base font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              disabled={item.quantity <= 1}>-</button>
+                            <input type="number" min="1" max={item.maxSellAllowed || 10} value={item.quantity}
+                              onChange={(e) => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, Math.max(1, parseInt(e.target.value) || 1)), item.priceListId)}
+                              className="w-12 sm:w-16 px-1 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded text-sm text-center" />
+                            <button onClick={() => updateQuantity(item.id, Math.min(item.maxSellAllowed || 10, item.quantity + 1), item.priceListId)}
+                              className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded text-base font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              disabled={item.quantity >= (item.maxSellAllowed || 10)}>+</button>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 ml-auto">
                             ${(item.price * item.quantity).toFixed(2)}
                           </p>
                         </div>
