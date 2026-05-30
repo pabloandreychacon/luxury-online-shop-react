@@ -34,51 +34,59 @@ export default function AdminAnalytics() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const today = new Date().toISOString().split('T')[0];
+  const [dateFrom, setDateFrom] = useState(today);
+  const [dateTo, setDateTo] = useState(today);
+  const [interactionTypes, setInteractionTypes] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState('');
 
   useEffect(() => {
-    loadData();
+    cleanupOldData();
+    loadTypes();
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [dateFrom, dateTo, typeFilter]);
+
+  const cleanupOldData = async () => {
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    await supabase.from('analytics_interactions').delete().lt('created_at', weekAgo);
+    await supabase.from('analytics_sessions').delete().lt('created_at', weekAgo);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [typeFilter]);
+
+  const loadTypes = async () => {
+    const { data } = await supabase
+      .from('analytics_interactions')
+      .select('interaction_type')
+      .order('interaction_type', { ascending: true });
+    const types = [...new Set((data || []).map((r: any) => r.interaction_type))].sort();
+    setInteractionTypes(types);
+  };
 
   const loadData = async () => {
     setLoading(true);
-    const { data: sessionsData } = await supabase
-      .from('analytics_sessions')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const toEnd = dateTo ? dateTo + 'T23:59:59.999Z' : undefined;
+    let sessionsQuery = supabase.from('analytics_sessions').select('*');
+    if (dateFrom) sessionsQuery = sessionsQuery.gte('created_at', dateFrom + 'T00:00:00Z');
+    if (toEnd) sessionsQuery = sessionsQuery.lte('created_at', toEnd);
+    sessionsQuery = sessionsQuery.order('created_at', { ascending: false });
+    const { data: sessionsData } = await sessionsQuery;
     setSessions(sessionsData || []);
-    const { data: interactionsData } = await supabase
-      .from('analytics_interactions')
-      .select('*')
-      .order('created_at', { ascending: false });
+
+    let interactionsQuery = supabase.from('analytics_interactions').select('*');
+    if (dateFrom) interactionsQuery = interactionsQuery.gte('created_at', dateFrom + 'T00:00:00Z');
+    if (toEnd) interactionsQuery = interactionsQuery.lte('created_at', toEnd);
+    if (typeFilter) interactionsQuery = interactionsQuery.eq('interaction_type', typeFilter);
+    interactionsQuery = interactionsQuery.order('created_at', { ascending: false });
+    const { data: interactionsData } = await interactionsQuery;
     setInteractions(interactionsData || []);
     setLoading(false);
   };
-
-  const filteredSessions = sessions.filter((s) => {
-    if (dateFrom && new Date(s.created_at) < new Date(dateFrom)) return false;
-    if (dateTo) {
-      const end = new Date(dateTo);
-      end.setHours(23, 59, 59, 999);
-      if (new Date(s.created_at) > end) return false;
-    }
-    return true;
-  });
-
-  const filteredInteractions = interactions.filter((i) => {
-    if (dateFrom && new Date(i.created_at) < new Date(dateFrom)) return false;
-    if (dateTo) {
-      const end = new Date(dateTo);
-      end.setHours(23, 59, 59, 999);
-      if (new Date(i.created_at) > end) return false;
-    }
-    if (typeFilter && i.interaction_type !== typeFilter) return false;
-    return true;
-  });
-
-  const interactionTypes = [...new Set(interactions.map((i) => i.interaction_type))].sort();
 
   if (loading) return <Preloader isLoading={loading} backgroundColor="#0f0f0f" accentColor="#d4af37" size={70} borderWidth={3} />;
 
@@ -112,7 +120,7 @@ export default function AdminAnalytics() {
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          {t('admin.sessions')} ({filteredSessions.length})
+          {t('admin.sessions')} ({sessions.length})
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -130,12 +138,12 @@ export default function AdminAnalytics() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredSessions.length === 0 ? (
+              {sessions.length === 0 ? (
                 <tr><td colSpan={9} className="px-3 py-8 text-center text-gray-500">{t('common.noResults')}</td></tr>
-              ) : filteredSessions.map((s) => (
+              ) : sessions.map((s) => (
                 <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-3 py-2 text-gray-900 dark:text-white">{s.id}</td>
-                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{new Date(s.created_at).toLocaleString()}</td>
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{String(s.created_at).replace('T', ' ').replace(/\.\d+/, '').replace(/\+00:00/, ' UTC')}</td>
                   <td className="px-3 py-2 text-gray-900 dark:text-white">{s.device_type}</td>
                   <td className="px-3 py-2 text-gray-900 dark:text-white">{s.os_name}</td>
                   <td className="px-3 py-2 text-gray-900 dark:text-white">{s.browser_name}</td>
@@ -152,7 +160,7 @@ export default function AdminAnalytics() {
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          {t('admin.interactions')} ({filteredInteractions.length})
+          {t('admin.interactions')} ({interactions.length})
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -168,12 +176,12 @@ export default function AdminAnalytics() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredInteractions.length === 0 ? (
+              {interactions.length === 0 ? (
                 <tr><td colSpan={7} className="px-3 py-8 text-center text-gray-500">{t('common.noResults')}</td></tr>
-              ) : filteredInteractions.map((i) => (
+              ) : interactions.map((i) => (
                 <tr key={i.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-3 py-2 text-gray-900 dark:text-white">{i.id}</td>
-                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{new Date(i.created_at).toLocaleString()}</td>
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{String(i.created_at).replace('T', ' ').replace(/\.\d+/, '').replace(/\+00:00/, ' UTC')}</td>
                   <td className="px-3 py-2 text-luxury-gold">{i.session_id}</td>
                   <td className="px-3 py-2"><span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium">{i.interaction_type}</span></td>
                   <td className="px-3 py-2 text-gray-900 dark:text-white">{i.element_type}</td>
