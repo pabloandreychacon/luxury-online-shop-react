@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { defaultSettings } from '../data/settings';
 import { useProductPriceLists } from '../hooks/useProductPriceLists';
 import { Preloader } from 'luna-components-library';
+import { trackInteraction } from '../lib/analytics';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -66,7 +67,7 @@ export default function ProductDetail() {
 
       const mappedProduct: Product = {
         id: String(productData.Id),
-        name: tr?.Name || productData.Name || '',
+        name: tr?.Name || productData.Name || String(productData.Id),
         category: categoryData?.Name?.toLowerCase() || '',
         price: productData.Price,
         image: productData.ImageUrl,
@@ -179,7 +180,7 @@ export default function ProductDetail() {
         const media = mediaMap[p.Id];
         return {
           id: String(p.Id),
-          name: tr?.Name || p.Name || '',
+          name: tr?.Name || p.Name || String(p.Id),
           category: categoryData?.Name?.toLowerCase() || '',
           price: p.Price,
           image: media?.MediaUrl || p.ImageUrl,
@@ -219,6 +220,7 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     const displayImage = displayMedia[activeImageIndex]?.MediaUrl || product.image;
     addItem({ ...product, price: effectivePrice, image: displayImage }, quantity, selectedPriceListId);
+    trackInteraction({ interactionType: 'add_to_cart', elementType: 'button', elementName: product.name, elementValue: product.id });
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 2000);
   };

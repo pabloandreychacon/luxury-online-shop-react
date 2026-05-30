@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useState } from 'react';
 import { useProductPriceLists } from '../hooks/useProductPriceLists';
+import { trackInteraction } from '../lib/analytics';
 
 interface ProductCardProps {
   product: Product;
@@ -25,6 +26,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = () => {
     addItem({ ...product, price: effectivePrice }, quantity, selectedPriceListId);
+    trackInteraction({ interactionType: 'add_to_cart', elementType: 'button', elementName: product.name, elementValue: product.id });
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 2000);
   };
@@ -61,8 +63,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             }
           }}
           className={`absolute top-4 right-4 p-2 rounded-full shadow-lg transition ${inWishlist
-              ? 'bg-luxury-gold text-luxury-dark'
-              : 'bg-white dark:bg-gray-800 hover:bg-luxury-gold text-gray-700 dark:text-gray-300'
+            ? 'bg-luxury-gold text-luxury-dark'
+            : 'bg-white dark:bg-gray-800 hover:bg-luxury-gold text-gray-700 dark:text-gray-300'
             }`}
         >
           <Heart size={20} fill={inWishlist ? 'currentColor' : 'none'} />

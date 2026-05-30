@@ -137,7 +137,7 @@ export default function Shop() {
         const tr = trs[i18n.language];
         return {
           id: String(p.Id),
-          name: tr?.Name || p.Name || '',
+          name: tr?.Name || p.Name || String(p.Id),
           category: cat?.Name?.toLowerCase() || '',
           price: p.Price,
           image: mediaMap[p.Id] || p.ImageUrl || '',

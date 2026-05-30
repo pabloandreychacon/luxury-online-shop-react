@@ -8,6 +8,7 @@ import HeroCarousel from '../components/HeroCarousel';
 import ProductCard from '../components/ProductCard';
 import type { Product } from '../lib/types';
 import SEO from '../components/SEO';
+import { trackInteraction } from '../lib/analytics';
 
 interface Category {
   Id: string;
@@ -77,7 +78,7 @@ export default function Home() {
 
           featuredProducts.push({
             id: String(productData.Id),
-            name: productData.Name,
+            name: productData.Name || String(productData.Id),
             category: category.Name?.toLowerCase() || '',
             price: productData.Price,
             image: imageUrl,
@@ -125,6 +126,7 @@ export default function Home() {
                   <Link
                     key={brand.Id}
                     to={`/shop?brand=${brand.Id}`}
+                    onClick={() => trackInteraction({ interactionType: 'click', elementType: 'link', elementName: brand.DisplayName || brand.Name, elementValue: String(brand.Id) })}
                     className="group relative h-36 rounded-lg overflow-hidden cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-luxury-gold transition-all duration-300"
                   >
                     {brand.BrandImage ? (
@@ -158,6 +160,7 @@ export default function Home() {
                 <Link
                   key={category.Id}
                   to={`/shop?category=${category.Name.toLowerCase()}`}
+                  onClick={() => trackInteraction({ interactionType: 'click', elementType: 'link', elementName: category.DisplayName, elementValue: category.Id })}
                   className="group relative h-32 rounded-lg overflow-hidden cursor-pointer bg-luxury-charcoal dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-luxury-gold transition-all duration-300"
                 >
                   <div className="absolute inset-0 flex items-center justify-center p-6">

@@ -20,6 +20,7 @@ import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
 import { useCart } from './context/CartContext';
 import { ShoppingBag } from 'lucide-react';
+import { createSession } from './lib/analytics';
 
 function AppContent() {
   const { showModal, lastAddedProduct, closeModal, loadFromStorage } = useCartStore();
@@ -40,6 +41,7 @@ function AppContent() {
 
   useEffect(() => {
     loadFromStorage();
+    createSession();
   }, []);
 
   useEffect(() => {

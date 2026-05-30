@@ -10,13 +10,14 @@ import AdminCategories from '../components/AdminCategories';
 import AdminShippingMethods from '../components/AdminShippingMethods';
 import AdminOrders from '../components/AdminOrders';
 import AdminBrands from '../components/AdminBrands';
+import AdminAnalytics from '../components/AdminAnalytics';
 
 export default function Admin() {
   const { t } = useTranslation();
   const [authenticated, setAuthenticated] = useState(() => localStorage.getItem('admin_auth') === 'true');
   const [password, setPassword] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'settings' | 'products' | 'categories' | 'brands' | 'shipping' | 'orders'>('settings');
+  const [activeTab, setActiveTab] = useState<'settings' | 'products' | 'categories' | 'brands' | 'shipping' | 'orders' | 'analytics'>('settings');
   const [loading] = useState(false);
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
 
@@ -210,6 +211,15 @@ export default function Admin() {
           >
             {t('admin.orders')}
           </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'analytics'
+              ? 'bg-luxury-gold text-luxury-dark'
+              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
+              }`}
+          >
+            {t('admin.analytics')}
+          </button>
         </div>
 
         {activeTab === 'settings' && <AdminSettings onSave={loadSettings} />}
@@ -218,6 +228,7 @@ export default function Admin() {
         {activeTab === 'brands' && <AdminBrands />}
         {activeTab === 'shipping' && <AdminShippingMethods />}
         {activeTab === 'orders' && <AdminOrders />}
+        {activeTab === 'analytics' && <AdminAnalytics />}
 
         {loading && (
           <div className="text-center text-gray-600 dark:text-gray-300">
